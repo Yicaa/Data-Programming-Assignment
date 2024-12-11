@@ -1,6 +1,6 @@
 ---
 title: "Group Task"
-author: "Marco Boso 100535153, Diego Paroli 100554973, Yijia Lin 100452242, Bradley McKenzie 100535241, Linghan Zheng 100540803"
+author: "Marco Boso 100535153, Diego Paroli 100554973, Yijia Lin 100452242, Bradley McKenzie 100535241, Linghan Zheng 100540803, Jia Lin 100536210"
 format:
   html:
     theme: [style.scss]
