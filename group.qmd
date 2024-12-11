@@ -10,6 +10,17 @@ format:
     embed-resources: true
 ---
 
+testing rules 
+
+
+# QUESTION 1
+TESTING.....
+
+
+Modify main branch to see how to resolve conflicts
+
+
+
 ## Instructions (read before starting)
 
 -   Modify within the `.qmd` document your personal data (names and ID) located in the header of the file.
