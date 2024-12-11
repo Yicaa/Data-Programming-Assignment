@@ -1,6 +1,6 @@
 ---
 title: "Group Task"
-author: "Marco Boso (DNI: YB3148641), Diego Paroli 100554973 Rosalía (DNI: 00000000-X), ..."
+author: "Marco Boso (100535153), Diego Paroli 100554973 Rosalía (DNI: 00000000-X), ..."
 format:
   html:
     theme: [style.scss]
