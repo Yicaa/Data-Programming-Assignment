@@ -161,6 +161,6 @@ Remember that the real goal is to demonstrate a mastery of the tools seen throug
 **Some dataviz will be extremely positive valued**.
 
 ```{r}
-#writing some code in here
+#Yijia commenting
 ```
 
