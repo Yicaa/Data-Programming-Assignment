@@ -1,6 +1,6 @@
 ---
 title: "Group Task"
-author: "C. Tangana (DNI: 00000000-X), Rosalía (DNI: 00000000-X), ..."
+author: "Marco Boso (DNI: YB3148641), Rosalía (DNI: 00000000-X), ..."
 format:
   html:
     theme: [style.scss]
