@@ -1,6 +1,10 @@
 ---
 title: "Group Task"
+<<<<<<< Updated upstream
 author: "Marco Boso 100535153, Diego Paroli 100554973, Yijia Lin 100452242, Bradley McKenzie 100535241, Linghan Zheng 100540803, Jia Lin 100536210, Isabel Monge 100542532"
+=======
+author: "Marco Boso (100535153), Diego Paroli 100554973, Yijia Lin 100452242, Isabel Monge 100542532..."
+>>>>>>> Stashed changes
 format:
   html:
     theme: [style.scss]
@@ -159,3 +163,110 @@ In addition to what you see fit to execute, the following items are mandatory:
 Remember that the real goal is to demonstrate a mastery of the tools seen throughout the course. And that happens not only by the quantity of them used but also by the quality when executing them.
 
 **Some dataviz will be extremely positive valued**.
+
+## Cleaning the data -- surveys
+```{r}
+# Load necessary libraries
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(lubridate)
+
+# Filter dataset
+cleaned_surveys <- surveys |>
+  mutate(
+    # Parse fieldwork dates as date objects
+    field_date_from = ymd(field_date_from),
+    field_date_to = ymd(field_date_to),
+    # Calculate the number of fieldwork days
+    fieldwork_days = as.numeric(field_date_to - field_date_from + 1)
+  ) |>
+  filter(
+    !exit_poll,                           # Exclude exit polls
+    field_date_from >= ymd("2008-01-01"), # Exclude polls before 2008
+    size >= 750,                          # Exclude polls with sample size < 750
+    fieldwork_days > 1                    # Exclude polls with 1 or fewer fieldwork days
+  )
+
+# Identify party columns dynamically
+metadata_columns <- c("type_survey", "date_elec", "id_pollster", "pollster", "media",
+                      "field_date_from", "field_date_to", "fieldwork_days", "exit_poll", 
+                      "size", "turnout")
+party_columns <- setdiff(colnames(cleaned_surveys), metadata_columns)
+
+# Reshape data into long format
+tidy_surveys <- cleaned_surveys |>
+  pivot_longer(
+    cols = all_of(party_columns),  # Reshape party columns
+    names_to = "party_raw",        # Raw party names
+    values_to = "votes"            # Corresponding voting intentions
+  )
+
+# Group parties into specified categories
+tidy_surveys <- tidy_surveys |>
+  mutate(
+    party = case_when(
+      str_detect(party_raw, "(?i)PSOE|PARTIDO SOCIALISTA") ~ "PARTIDO SOCIALISTA OBRERO ESPAÑOL",
+      str_detect(party_raw, "(?i)CIUDADANOS|C’S") ~ "CIUDADANOS",
+      str_detect(party_raw, "(?i)PNV|EAJ-PNV") ~ "PARTIDO NACIONALISTA VASCO",
+      str_detect(party_raw, "(?i)BNG") ~ "BLOQUE NACIONALISTA GALLEGO",
+      str_detect(party_raw, "(?i)CIU|CONVERGÈNCIA|UNIÓ") ~ "CONVERGÈNCIA I UNIÓ",
+      str_detect(party_raw, "(?i)IU|PODEMOS|EZKER BATUA|UNIDAS PODEMOS") ~ "UNIDAS PODEMOS - IU",
+      str_detect(party_raw, "(?i)ERC|ESQUERRA") ~ "ESQUERRA REPUBLICANA DE CATALUNYA",
+      str_detect(party_raw, "(?i)SORTU|EUSKO ALKARTASUNA|ARALAR|ALTERNATIBA|EH BILDU") ~ "EH - BILDU",
+      str_detect(party_raw, "(?i)MÁS PAÍS") ~ "MÁS PAÍS",
+      str_detect(party_raw, "(?i)VOX") ~ "VOX",
+      TRUE ~ "OTHER"
+    )
+  )
+
+# Select relevant columns
+tidy_surveys <- tidy_surveys |>
+  select(type_survey, date_elec, id_pollster, pollster, media, field_date_from, field_date_to, 
+         fieldwork_days, size, turnout, party, votes)
+
+# Preview
+tidy_surveys
+
+```
+
+## Cleaning the data -- election_data
+ 
+```{r}
+# Filter data for elections between 2008 and 2019
+filtered_data <- election_data |>
+  filter(anno >= 2008 & anno <= 2019)
+
+# Reshape the dataset into long format
+tidy_election <- filtered_data |>
+  pivot_longer(
+    cols = starts_with("votos_"),  # Include all vote-related columns
+    names_to = "party_raw",        # Create a column for raw party names
+    values_to = "votes"            # Create a column for vote counts
+  )
+
+# Group parties using predefined patterns
+tidy_election <- tidy_election |>
+  mutate(
+    party = case_when(
+      str_detect(party_raw, "(?i)PSOE|PARTIDO SOCIALISTA") ~ "PARTIDO SOCIALISTA OBRERO ESPAÑOL",
+      str_detect(party_raw, "(?i)CIUDADANOS|C’S") ~ "CIUDADANOS",
+      str_detect(party_raw, "(?i)PNV|EAJ-PNV") ~ "PARTIDO NACIONALISTA VASCO",
+      str_detect(party_raw, "(?i)BNG") ~ "BLOQUE NACIONALISTA GALLEGO",
+      str_detect(party_raw, "(?i)CIU|CONVERGÈNCIA|UNIÓ") ~ "CONVERGÈNCIA I UNIÓ",
+      str_detect(party_raw, "(?i)IU|PODEMOS|EZKER BATUA|UNIDAS PODEMOS") ~ "UNIDAS PODEMOS - IU",
+      str_detect(party_raw, "(?i)ERC|ESQUERRA") ~ "ESQUERRA REPUBLICANA DE CATALUNYA",
+      str_detect(party_raw, "(?i)SORTU|EUSKO ALKARTASUNA|ARALAR|ALTERNATIBA|EH BILDU") ~ "EH - BILDU",
+      str_detect(party_raw, "(?i)MÁS PAÍS") ~ "MÁS PAÍS",
+      str_detect(party_raw, "(?i)VOX") ~ "VOX",
+      TRUE ~ "OTHER"
+    )
+  )
+
+# Keep only relevant columns
+tidy_election <- tidy_election |>
+  select(tipo_eleccion, anno, mes, vuelta, party, votes)
+
+# Preview
+tidy_election
+```
