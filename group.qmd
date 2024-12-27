@@ -14,6 +14,12 @@ format:
     embed-resources: true
 ---
 
+# QUESTION 1
+
+TESTING
+
+Modify main branch to see how to resolve conflicts
+
 ## Instructions (read before starting)
 
 -   Modify within the `.qmd` document your personal data (names and ID) located in the header of the file.
@@ -90,11 +96,11 @@ In addition to what you see fit to execute, the following items are mandatory:
 
 -   Each group should **present before 9th January (23:59) an analysis of the data** in `.qmd` and `.html` format in **Quarto slides** mode, which **will be the ones they will present on the day of the presentation**.
 
-- **Quarto slides should be uploaded to Github** (the link should be provided by a member of each group).
+-   **Quarto slides should be uploaded to Github** (the link should be provided by a member of each group).
 
-- The **maximum number of slides** should be 40. The **maximum time for each group** will be 20-22 minutes (+5 minutes for questions).
+-   The **maximum number of slides** should be 40. The **maximum time for each group** will be 20-22 minutes (+5 minutes for questions).
 
--   During the presentation you will **explain (summarised!) the analysis performed** so that **each team member speaks for a similar amount of time** and **each member can be asked about any of the steps**. The grade does not have to be the same for all members. 
+-   During the presentation you will **explain (summarised!) the analysis performed** so that **each team member speaks for a similar amount of time** and **each member can be asked about any of the steps**. The grade does not have to be the same for all members.
 
 -   It will be valued not only the content but also the container (aesthetics).
 
@@ -102,21 +108,22 @@ In addition to what you see fit to execute, the following items are mandatory:
 
 #### Mandatory items:
 
-1. Data should be **converted to tidydata** where appropriate.
+1.  Data should be **converted to tidydata** where appropriate.
 
-2. You should **include at least one join** between tables.
+2.  You should **include at least one join** between tables.
 
-3. Reminder: information = variance, so **remove columns that are not going to contribute anything**.
+3.  Reminder: information = variance, so **remove columns that are not going to contribute anything**.
 
-4. The **glue and lubridate** packages should be used at some point, as well as the **forcats**. The use of **ggplot2** will be highly valued.
+4.  The **glue and lubridate** packages should be used at some point, as well as the **forcats**. The use of **ggplot2** will be highly valued.
 
-5. The following should be used at least once:
+5.  The following should be used at least once:
+
     -   mutate
     -   summarise
     -   group_by (or equivalent)
     -   case_when
 
-6. We have many, many parties running for election. **We will only be interested in the following parties**:
+6.  We have many, many parties running for election. **We will only be interested in the following parties**:
 
     -   PARTIDO SOCIALISTA OBRERO ESPAÑOL (beware: it has/had federations - branches - with some other name).
     -   PARTIDO POPULAR
@@ -130,31 +137,39 @@ In addition to what you see fit to execute, the following items are mandatory:
     -   MÁS PAÍS
     -   VOX
 
-7. Anything other than any of the above parties should be imputed as "OTHER". Remember to add properly the data after the previous recoding.
+7.  Anything other than any of the above parties should be imputed as "OTHER". Remember to add properly the data after the previous recoding.
 
-8.   Party acronyms will be used for the visualizations. The inclusion of graphics will be highly valued (see <https://r-graph-gallery.com/>).
+8.  Party acronyms will be used for the visualizations. The inclusion of graphics will be highly valued (see <https://r-graph-gallery.com/>).
 
-9. You must use all 4 data files at some point.
+9.  You must use all 4 data files at some point.
 
-10.  You must define at least one (non-trivial) function of your own.
+10. You must define at least one (non-trivial) function of your own.
 
-11.  You will have to discard mandatory polls that:
+11. You will have to discard mandatory polls that:
 
-    -   refer to elections before 2018
-    -   that are exit polls
-    -   have a sample size of less than 750 or are unknown
-    -   that have less than 1 or less fieldwork days
+```         
+-   refer to elections before 2018
+-   that are exit polls
+-   have a sample size of less than 750 or are unknown
+-   that have less than 1 or less fieldwork days
+```
 
-12.   You must obligatorily answer the following questions (plus those that you consider analyzing to distinguish yourself from the rest of the teams, either numerically and/or graphically)
+12. You must obligatorily answer the following questions (plus those that you consider analyzing to distinguish yourself from the rest of the teams, either numerically and/or graphically)
 
-    -   Which party was the winner in the municipalities with more than 100,000 habitants (census) in each of the elections?
-    -   Which party was the second when the first was the PSOE? And when the first was the PP?
-    -   Who benefits from low turnout?
-    -   How to analyze the relationship between census and vote? Is it true that certain parties win in rural areas?
-    -   How to calibrate the error of the polls (remember that the polls are voting intentions at national level)?
-    -   Which polling houses got it right the most and which ones deviated the most from the results?
+```         
+-   Which party was the winner in the municipalities with more than 100,000 habitants (census) in each of the elections?
+-   Which party was the second when the first was the PSOE? And when the first was the PP?
+-   Who benefits from low turnout?
+-   How to analyze the relationship between census and vote? Is it true that certain parties win in rural areas?
+-   How to calibrate the error of the polls (remember that the polls are voting intentions at national level)?
+-   Which polling houses got it right the most and which ones deviated the most from the results?
+```
 
 **You should include at least 3 more "original" questions** that you think that it could be interesting to be answer with the data.
+
+SOME IDEAS FOR THE ORIGINAL QUESTIONS TO START?
+
+-   Which regions had the most predictable votes (i.e. consistently voted for the same party) and which regions were the most undecided (i.e. had the most variance in there votes across) between the 2008 and 2019 elections?
 
 #### Marks
 
