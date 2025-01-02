@@ -22,66 +22,6 @@ format:
 
 -   Remember that you can run chunk by chunk with the *play* button or run all chunks up to a given chunk (with the button to the left of the previous one).
 
-### Required packages
-
-> Insert in the lower chunk the packages you will need
-
-```{r}
-rm(list = ls())
-library(tidyverse)
-library(dplyr)
-library(tidyr)
-library(stringr)
-library(lubridate)
-library(DataExplorer)
-
-```
-
-## Group task
-
-### Data
-
-The practice will be based on the **electoral data archives** below, compiling data on elections to the Spanish Congress of Deputies from 2008 to the present, as well as surveys, municipalities codes and abbreviations.
-
-```{r}
-# NO TOQUES NADA
-election_data <- read_csv(file = "./data/datos_elecciones_brutos.csv")
-cod_mun <- read_csv(file = "./data/cod_mun.csv")
-surveys <- read_csv(file = "./data/historical_surveys.csv")
-abbrev <- read_csv(file = "./data/siglas.csv")
-```
-
-The data will be as follows:
-
--   `election_data`: file with election data for Congress from 2018 to the last ones in 2019.
-
-    -   `tipo_eleccion`: type of election (02 if congressional election)
-    -   `anno`, `mes`: year and month of elections
-    -   `vuelta`: electoral round (1 if first round)
-    -   `codigo_ccaa, codigo_provincia, codigo_municipio, codigo_distrito_electoral`: code of the ccaa, province, municipality and electoral district.
-    -   `numero_mesas`: number of polling stations
-    -   `censo`: census
-    -   `participacion_1, participacion_2`: participation in the first preview (14:00) and second preview (18:00) before polls close (20:00)
-    -   `votos_blancos`: blank ballots
-    -   `votos_candidaturas`: party ballots
-    -   `votos_nulos`: null ballots
-    -   ballots for each party
-
--   `cod_mun`: file with the codes and names of each municipality
-
--   `abbrev`: acronyms and names associated with each party
-
--   `surveys`: table of electoral polls since 1982. Some of the variables are the following:
-
-    -   `type_survey`: type of survey (national, regional, etc.)
-    -   `date_elec`: date of future elections
-    -   `id_pollster`, `pollster`, `media`: id and name of the polling company, as well as the media that commissioned it.
-    -   `field_date_from`, `field_date_to`: start and end date of fieldwork
-    -   `exit_poll`: whether it is an exit poll or not
-    -   `size`: sample size
-    -   `turnout`: turnout estimate
-    -   estimated voting intentions for the main parties
-
 ### Objectives and mandatory items
 
 The objective of the delivery is to perform an analysis of the electoral data, carrying out the debugging, summaries and graphs you consider, both of their results and the accuracy of the electoral polls.
@@ -181,6 +121,65 @@ Remember that the real goal is to demonstrate a mastery of the tools seen throug
 
 **Some dataviz will be extremely positive valued**.
 
+### Required packages
+
+> Insert in the lower chunk the packages you will need
+
+```{r}
+rm(list = ls())
+library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(lubridate)
+library(DataExplorer)
+
+```
+
+## Group task
+
+### Data
+
+The practice will be based on the **electoral data archives** below, compiling data on elections to the Spanish Congress of Deputies from 2008 to the present, as well as surveys, municipalities codes and abbreviations.
+
+```{r}
+# NO TOQUES NADA
+election_data <- read_csv(file = "./data/datos_elecciones_brutos.csv")
+cod_mun <- read_csv(file = "./data/cod_mun.csv")
+surveys <- read_csv(file = "./data/historical_surveys.csv")
+abbrev <- read_csv(file = "./data/siglas.csv")
+```
+The data will be as follows:
+
+-   `election_data`: file with election data for Congress from 2018 to the last ones in 2019.
+
+    -   `tipo_eleccion`: type of election (02 if congressional election)
+    -   `anno`, `mes`: year and month of elections
+    -   `vuelta`: electoral round (1 if first round)
+    -   `codigo_ccaa, codigo_provincia, codigo_municipio, codigo_distrito_electoral`: code of the ccaa, province, municipality and electoral district.
+    -   `numero_mesas`: number of polling stations
+    -   `censo`: census
+    -   `participacion_1, participacion_2`: participation in the first preview (14:00) and second preview (18:00) before polls close (20:00)
+    -   `votos_blancos`: blank ballots
+    -   `votos_candidaturas`: party ballots
+    -   `votos_nulos`: null ballots
+    -   ballots for each party
+
+-   `cod_mun`: file with the codes and names of each municipality
+
+-   `abbrev`: acronyms and names associated with each party
+
+-   `surveys`: table of electoral polls since 1982. Some of the variables are the following:
+
+    -   `type_survey`: type of survey (national, regional, etc.)
+    -   `date_elec`: date of future elections
+    -   `id_pollster`, `pollster`, `media`: id and name of the polling company, as well as the media that commissioned it.
+    -   `field_date_from`, `field_date_to`: start and end date of fieldwork
+    -   `exit_poll`: whether it is an exit poll or not
+    -   `size`: sample size
+    -   `turnout`: turnout estimate
+    -   estimated voting intentions for the main parties
+
 ## Cleaning the data -- surveys
 ```{r}
 
@@ -244,7 +243,7 @@ tidy_surveys
 
 ## Cleaning the data -- election_data
 
-The election_data file is large and requires quite extensive cleaning to make it "tidy". We will tidy the data to try make it most useful for future analysis. The election data starts off with 48,737 rows and 471 rows. Reducing the number of columns is a clear priority. 
+The election_data file is large and requires quite extensive cleaning to make it "tidy". We will tidy the data to try make it most useful for future analysis. The election data starts off with 48,737 rows and 471 columns. Reducing the number of columns is a clear priority. 
 
 First, we look at the quality of the data and see if any information is redundant and can be removed. 
 
@@ -276,7 +275,7 @@ str(election_pivot)
 head(election_pivot)
 ```
 
-We now have a table with 21,785,439 rows and 17 columns. This is more clean than previously, but we still need to aggregate of our party variables into the main party groups. We will do this by matching on the 
+We now have a table with 21,785,439 rows and 17 columns. This is more clean than previously, but we still need to aggregate of our party variables into the main party groups. We will do this by creating a mapping table (party_names) that standardizes the raw party names into main party groupings (party_main) using regular expressions.
 
 ```{r}
 # pull out all the party names so we can match to our main party groupings
@@ -330,12 +329,12 @@ election_pivot <- left_join(x=election_pivot, y=party_names,
 
 We now have a table of the almost 22 million rows and 18 variables. 
 
-Now we will include some addiitonal information that will make the analysis potentially easier later, including province and valid vote counts from our data:
+Now we will include some additional information that will make the analysis potentially easier later, including province and valid vote counts from our data:
 
 ``` {r join-provnames}
 # create municipal code to join on municipal names. 
 election_pivot <- election_pivot |>
-  mutate(cod_mun = paste(codigo_ccaa, codigo_provincia, codigo_municipio, sep="-"), # create municipo code to join
+  mutate(cod_mun = paste(codigo_ccaa, codigo_provincia, codigo_municipio, sep="-"), # create municipio code to join
          valid_votes = votos_candidaturas, 
          invalid_votes = votos_blancos + votos_nulos,
          total_votes = valid_votes + invalid_votes)
@@ -343,7 +342,7 @@ election_pivot <- election_pivot |>
 # join municipality names and create vote count columns
 election_pivot <- left_join(election_pivot, cod_mun, by = join_by(cod_mun))  
 
-# check quality of the join and whether NA's have been introduced as municpality names
+# check quality of the join and whether NA's have been introduced as municipality names
 table(is.na(election_pivot$municipio))
 
 ```
@@ -385,8 +384,8 @@ tidy_election <- election_pivot |>
          invalid_votes,
          number_tables = numero_mesas,
          population = censo,
-         participacion_1,
-         participacion_2,
+         participation_1 = participacion_1,
+         participation_2 = participacion_2,
          party,
          ballots,
          party_main)
@@ -411,8 +410,8 @@ tidy_election <- tidy_election |>
          invalid_votes,
          number_tables,
          population,
-         participacion_1,
-         participacion_2,
+         participation_1,
+         participation_2,
          # party,   # not included as we want to group by party_main
          # ballots, # not included as we create our summary of votes by party_main
          party_main) |> 
@@ -435,7 +434,7 @@ Party votes received -> party_main, party_ballots
 
 #-------------------
 
-For Isabelle, Marco and Brad post-cleaning, describe out data status after cleaning at this stage:
+For Isabel, Marco and Brad post-cleaning, describe out data status after cleaning at this stage:
 
 e.g. we have 2 primary datasets at this stage, election data and survey data. 
 
@@ -507,7 +506,7 @@ The election data includes:
 ```
 
 
-## 7. Marco, Isabelle, Brad
+## 7. Marco, Isabel, Brad
 
 ```{r}
 
