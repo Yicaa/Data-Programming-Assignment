@@ -1,8 +1,13 @@
 ---
 title: "Group Task"
-<<<<<<< Updated upstream
-author: "Marco Boso 100535153, Diego Paroli 100554973, Yijia Lin 100452242, Bradley McKenzie 100535241, Linghan Zheng 100540803, Jia Lin 100536210, Isabel Monge 100542532"
-=======
+author:
+  - "Marco Boso 100535153"
+  - "Diego Paroli 100554973"
+  - "Yijia Lin 100452242"
+  - "Bradley McKenzie 100535241"
+  - "Linghan Zheng 100540803"
+  - "Jia Lin 100536210"
+  - "Isabel Monge 100542532"
 format:
   html:
     theme: [style.scss]
@@ -12,23 +17,13 @@ format:
     embed-resources: true
 ---
 
-## Instructions (read before starting)
-
--   Modify within the `.qmd` document your personal data (names and ID) located in the header of the file.
-
--   Make sure, **BEFORE further editing** the document, that the `.qmd` file is rendered correctly and the corresponding `.html` is generated in your local folder on your computer.
-
--   The chunks (code boxes) created are either empty or incomplete. Once you edit what you consider, you must change each chunk to `#| eval: true` (or remove it directly) for them to run.
-
--   Remember that you can run chunk by chunk with the *play* button or run all chunks up to a given chunk (with the button to the left of the previous one).
-
-### Objectives and mandatory items
+## Objectives and mandatory items
 
 The objective of the delivery is to perform an analysis of the electoral data, carrying out the debugging, summaries and graphs you consider, both of their results and the accuracy of the electoral polls.
 
 Specifically, **you must work only in the time window that includes the elections from 2008 to the last elections of 2019**.
 
-#### General comments
+### General comments
 
 In addition to what you see fit to execute, the following items are mandatory:
 
@@ -44,7 +39,7 @@ In addition to what you see fit to execute, the following items are mandatory:
 
 -   The **objective is to demonstrate that the maximum knowledge of the course has been acquired**: the more content of the syllabus is included, the better.
 
-#### Mandatory items:
+### Mandatory items:
 
 1.  Data should be **converted to tidydata** where appropriate.
 
@@ -105,15 +100,7 @@ In addition to what you see fit to execute, the following items are mandatory:
 
 **You should include at least 3 more "original" questions** that you think that it could be interesting to be answer with the data.
 
-SOME IDEAS FOR THE ORIGINAL QUESTIONS TO START?
-
--   Which regions had the most predictable votes (i.e. consistently voted for the same party) and which regions were the most undecided (i.e. had the most variance in there votes across) between the 2008 and 2019 elections?
-
-- Map the outcomes over time - plotly on the results? Not sure as I didn't do a map
-
-- Can we load in other data? think that would go down well? Maybe predict the next election results based on previous trends of the 5 years and compare to see if the following election followed the trend? Think Javi would be happy with new data. 
-
-#### Marks
+### Marks
 
 **The one who does the most things will not be valued the most**. More is not always better. The **originality** (with respect to the rest of the works, for example in the analyzed or in the subject or ...) of what has been proposed, in the handling of tables (or in the visualization), the **caring** put in the delivery (care in life is important) and the **relevance** of what has been done will be valued. Once you have the mandatory items with your database more or less completed, **think before** chopping code: what could be interesting? What do I need to get a summary both numerical and visual?
 
@@ -121,7 +108,7 @@ Remember that the real goal is to demonstrate a mastery of the tools seen throug
 
 **Some dataviz will be extremely positive valued**.
 
-### Required packages
+## Required packages
 
 > Insert in the lower chunk the packages you will need
 
@@ -136,9 +123,7 @@ library(DataExplorer)
 
 ```
 
-## Group task
-
-### Data
+## Data
 
 The practice will be based on the **electoral data archives** below, compiling data on elections to the Spanish Congress of Deputies from 2008 to the present, as well as surveys, municipalities codes and abbreviations.
 
@@ -149,10 +134,10 @@ cod_mun <- read_csv(file = "./data/cod_mun.csv")
 surveys <- read_csv(file = "./data/historical_surveys.csv")
 abbrev <- read_csv(file = "./data/siglas.csv")
 ```
+
 The data will be as follows:
 
 -   `election_data`: file with election data for Congress from 2018 to the last ones in 2019.
-
     -   `tipo_eleccion`: type of election (02 if congressional election)
     -   `anno`, `mes`: year and month of elections
     -   `vuelta`: electoral round (1 if first round)
@@ -170,7 +155,6 @@ The data will be as follows:
 -   `abbrev`: acronyms and names associated with each party
 
 -   `surveys`: table of electoral polls since 1982. Some of the variables are the following:
-
     -   `type_survey`: type of survey (national, regional, etc.)
     -   `date_elec`: date of future elections
     -   `id_pollster`, `pollster`, `media`: id and name of the polling company, as well as the media that commissioned it.
@@ -180,7 +164,8 @@ The data will be as follows:
     -   `turnout`: turnout estimate
     -   estimated voting intentions for the main parties
 
-## Cleaning the data -- surveys
+### Cleaning the data -- surveys
+
 ```{r}
 
 # Filter dataset
@@ -241,11 +226,11 @@ tidy_surveys
 
 ```
 
-## Cleaning the data -- election_data
+### Cleaning the data -- election_data
 
 The election_data file is large and requires quite extensive cleaning to make it "tidy". We will tidy the data to try make it most useful for future analysis. The election data starts off with 48,737 rows and 471 columns. Reducing the number of columns is a clear priority. 
 
-First, we look at the quality of the data and see if any information is redundant and can be removed. 
+First, we look at the quality of the data and see if any information is redundant and can be removed.
 
 ```{r check-electiondata-quality}
 plot_intro(election_data)
@@ -348,7 +333,7 @@ table(is.na(election_pivot$municipio))
 ```
 
 
-## Aggregate election ballot data to main party groups
+### Aggregate election ballot data to main party groups
 
 Now we need to group together all of the votes for "OTHER" variables and create unique identifiers for each individual election in our dataframes. 
 
@@ -369,7 +354,6 @@ summary(election_pivot)
 ```
 
 To clean the data more, reduce our dataset and rename key variables so everything is more consistent in English.
-
  
 ```{r tidy-election}
 tidy_election <- election_pivot |> 
@@ -394,7 +378,7 @@ tidy_election <- election_pivot |>
  
 Now we group by each individual election to summarise the votes to each of the main parties. We can then drop the `party` variable in favour of keeping `party_main` only. We also lose the ballots variable as it becomes party_ballots in our summarise function. 
  
- We identify each election in each province by keeping the descriptive data for each election. Then summarise the number of ballots to each main party group. 
+We identify each election in each province by keeping the descriptive data for each election. Then summarise the number of ballots to each main party group. 
  
 ```{r tidy-election-clean}
 
@@ -426,19 +410,16 @@ We now have a tibble of 15 columns with 536,107 rows for analysis. This is much 
 Election identifiers: 
 
 Timing -> year, month
-Area information -> code_community (autonomous community), code_province, code_municipality, municipality, population
-General election information -> total_votes, valid_votes, invalid_votes, number_tables, participacion_1, participacion_2
-Party votes received -> party_main, party_ballots
+  - Area information -> code_community (autonomous community), code_province, code_municipality, municipality, population
+  - General election information -> total_votes, valid_votes, invalid_votes, number_tables, participacion_1, participacion_2
+  - Party votes received -> party_main, party_ballots
 
+**For Isabel, Marco and Brad post-cleaning, describe out data status after cleaning at this stage:**
 
+We have 2 primary datasets at this stage, election data and survey data. 
 
-#-------------------
+The survey data includes:
 
-For Isabel, Marco and Brad post-cleaning, describe out data status after cleaning at this stage:
-
-e.g. we have 2 primary datasets at this stage, election data and survey data. 
-
-The survey data includes: 
   - 
 
 The election data includes:
@@ -449,64 +430,70 @@ The election data includes:
   - votes received for the party 
   - 
 
+## Mandatory questions
 
-
-# Mandatory questions
-
-## 1.Which party was the winner in the municipalities with more than 100,000 habitants (census) in each of the elections?
+### 1.Which party was the winner in the municipalities with more than 100,000 habitants (census) in each of the elections?
 
 ```{r}
 
 ```
 
 
-## 2. Which party was the second when the first was the PSOE? And when the first was the PP?
+### 2. Which party was the second when the first was the PSOE? And when the first was the PP?
 
 ```{r}
 
 ```
 
-## 3. Who benefits from low turnout?
+### 3. Who benefits from low turnout?
 
 ```{r}
 
 ```
 
-## 4. How to analyze the relationship between census and vote? Is it true that certain parties win in rural areas?
+### 4. How to analyze the relationship between census and vote? Is it true that certain parties win in rural areas?
 
 ```{r}
 
 ```
 
-## 5. How to calibrate the error of the polls (remember that the polls are voting intentions at national level)?
-
-```{r}
-
-```
-
-
-## 6. Which polling houses got it right the most and which ones deviated the most from the results?
-
-```{r}
-
-```
-
-# Additional questions
-
-## 7. Jacklyn and Linghan
-
-```{r}
-
-```
-
-## 8. Yijia and Diego 
+### 5. How to calibrate the error of the polls (remember that the polls are voting intentions at national level)?
 
 ```{r}
 
 ```
 
 
-## 7. Marco, Isabel, Brad
+### 6. Which polling houses got it right the most and which ones deviated the most from the results?
+
+```{r}
+
+```
+
+## Additional questions
+
+SOME IDEAS FOR THE ORIGINAL QUESTIONS TO START?
+
+-   Which regions had the most predictable votes (i.e. consistently voted for the same party) and which regions were the most undecided (i.e. had the most variance in there votes across) between the 2008 and 2019 elections?
+
+- Map the outcomes over time - plotly on the results? Not sure as I didn't do a map
+
+- Can we load in other data? think that would go down well? Maybe predict the next election results based on previous trends of the 5 years and compare to see if the following election followed the trend? Think Javi would be happy with new data. 
+
+### 7. Jacklyn and Linghan
+
+```{r}
+
+```
+
+### 8. Yijia and Diego 
+
+```{r}
+
+```
+
+
+### 7. Marco, Isabel, Brad
 
 ```{r}
 
