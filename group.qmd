@@ -249,7 +249,6 @@ tidy_surveys <- tidy_surveys |>
 
 # Preview
 tidy_surveys
-
 ```
 
 ### Cleaning the data -- election_data
@@ -269,12 +268,14 @@ election_data <- election_data |>
   select(-all_of(blank_cols)) |> 
   filter(anno >= 2008 & anno <= 2019)
 
+# Drop columns that are logical
+election_data <- election_data %>%
+  select(where(~ !is.logical(.)))
 ```
 
 Second, we begin to make the election data tidy. We start by pivoting the data so all columns for party names are within one "party" variable. 
 
 ```{r pivot-election}
-
 # Pivot all the party names and ballot counts to the main table
 election_pivot <- election_data |> 
   pivot_longer(
