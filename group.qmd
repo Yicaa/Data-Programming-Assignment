@@ -245,7 +245,7 @@ tidy_surveys <- tidy_surveys %>%
 # Select relevant columns
 tidy_surveys <- tidy_surveys |>
   select(type_survey, date_elec, id_pollster, pollster, media, field_date_from, field_date_to, 
-         fieldwork_days, size, turnout, party, votes)
+         fieldwork_days, size, turnout, party, pary_raw, votes)
 
 # Preview
 tidy_surveys
