@@ -242,10 +242,31 @@ tidy_surveys <- tidy_surveys %>%
       TRUE ~ "OTHER")
   )
 
+# Create a column for proper, unqique acronyms
+tidy_surveys <- tidy_surveys |> 
+  mutate(
+    party_code = case_when(
+      party == "UNIDAS PODEMOS - IU"~ "PODEMOS-IU",
+      party == "OTHER"~ "OTHER",
+      TRUE ~ party_raw)
+  )
+
 # Select relevant columns
-tidy_surveys <- tidy_surveys |>
-  select(type_survey, date_elec, id_pollster, pollster, media, field_date_from, field_date_to, 
-         fieldwork_days, size, turnout, party, pary_raw, votes)
+# Getting rid of type_survey, exit_poll (take only 1 value), party_raw
+# Do we want to get rid of media as well? Or can it be useful?
+final_surveys <- tidy_surveys |>
+  select(-type_survey, -exit_poll, -party_raw) |> 
+  relocate(fieldwork_days, .after = field_date_to) |> 
+  relocate(votes, .after = party_code) 
+
+# Summing all votes based on the party reclassification
+final_surveys <- final_surveys |> 
+  group_by(across(-votes)) |> 
+  summarize(votes = sum(votes, na.rm = TRUE), .groups = "drop") |> 
+  arrange(field_date_from)
+# We have 1614 surveys (rows from cleaned_surveys), 12 parties (meaning 12 rows per survey). Thus 1614x12=19368 rows
+
+# Can we get rid of some rows? ex. the ones where votes == 0? Or would that be detrimental
 
 # Preview
 tidy_surveys
