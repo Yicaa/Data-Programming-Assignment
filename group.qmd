@@ -16,11 +16,7 @@ format:
     toc-title: Índice
     embed-resources: true
 ---
-<<<<<<< HEAD
 
-=======
-<<<<<<< HEAD
->>>>>>> Jacklyn
 ## Instructions (read before starting)
 =======
 
