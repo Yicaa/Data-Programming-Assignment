@@ -1,6 +1,13 @@
 ---
 title: "Group Task"
-author: "Marco Boso 100535153, Diego Paroli 100554973, Yijia Lin 100452242, Bradley McKenzie 100535241, Linghan Zheng 100540803, Jia Lin 100536210, Isabel Monge 100542532"
+author:
+  - "Marco Boso 100535153"
+  - "Diego Paroli 100554973"
+  - "Yijia Lin 100452242"
+  - "Bradley McKenzie 100535241"
+  - "Linghan Zheng 100540803"
+  - "Jia Lin 100536210"
+  - "Isabel Monge 100542532"
 format:
   html:
     theme: [style.scss]
@@ -9,29 +16,122 @@ format:
     toc-title: Índice
     embed-resources: true
 ---
+<<<<<<< HEAD
 
+=======
+<<<<<<< HEAD
+>>>>>>> Jacklyn
 ## Instructions (read before starting)
+=======
 
--   Modify within the `.qmd` document your personal data (names and ID) located in the header of the file.
+## Objectives and mandatory items
 
--   Make sure, **BEFORE further editing** the document, that the `.qmd` file is rendered correctly and the corresponding `.html` is generated in your local folder on your computer.
+The objective of the delivery is to perform an analysis of the electoral data, carrying out the debugging, summaries and graphs you consider, both of their results and the accuracy of the electoral polls.
 
--   The chunks (code boxes) created are either empty or incomplete. Once you edit what you consider, you must change each chunk to `#| eval: true` (or remove it directly) for them to run.
+Specifically, **you must work only in the time window that includes the elections from 2008 to the last elections of 2019**.
 
--   Remember that you can run chunk by chunk with the *play* button or run all chunks up to a given chunk (with the button to the left of the previous one).
+### General comments
 
-### Required packages
+In addition to what you see fit to execute, the following items are mandatory:
+
+-   Each group should **present before 9th January (23:59) an analysis of the data** in `.qmd` and `.html` format in **Quarto slides** mode, which **will be the ones they will present on the day of the presentation**.
+
+-   **Quarto slides should be uploaded to Github** (the link should be provided by a member of each group).
+
+-   The **maximum number of slides** should be 40. The **maximum time for each group** will be 20-22 minutes (+5 minutes for questions).
+>>>>>>> main
+
+-   During the presentation you will **explain (summarised!) the analysis performed** so that **each team member speaks for a similar amount of time** and **each member can be asked about any of the steps**. The grade does not have to be the same for all members.
+
+-   It will be valued not only the content but also the container (aesthetics).
+
+-   The **objective is to demonstrate that the maximum knowledge of the course has been acquired**: the more content of the syllabus is included, the better.
+
+### Mandatory items:
+
+1.  Data should be **converted to tidydata** where appropriate.
+
+2.  You should **include at least one join** between tables.
+
+3.  Reminder: information = variance, so **remove columns that are not going to contribute anything**.
+
+4.  The **glue and lubridate** packages should be used at some point, as well as the **forcats**. The use of **ggplot2** will be highly valued.
+
+5.  The following should be used at least once:
+
+    -   mutate
+    -   summarise
+    -   group_by (or equivalent)
+    -   case_when
+
+6.  We have many, many parties running for election. **We will only be interested in the following parties**:
+
+    -   PARTIDO SOCIALISTA OBRERO ESPAÑOL (beware: it has/had federations - branches - with some other name).
+    -   PARTIDO POPULAR
+    -   CIUDADANOS (caution: has/had federations - branches - with some other name)
+    -   PARTIDO NACIONALISTA VASCO
+    -   BLOQUE NACIONALISTA GALLEGO
+    -   CONVERGÈNCIA I UNIÓ
+    -   UNIDAS PODEMOS - IU (beware that here they have had various names - IU, podem, ezker batua, ...- and have not always gone together, but here we will analyze them together)
+    -   ESQUERRA REPUBLICANA DE CATALUNYA
+    -   EH - BILDU (are now a coalition of parties formed by Sortu, Eusko Alkartasuna, Aralar, Alternatiba)
+    -   MÁS PAÍS
+    -   VOX
+
+7.  Anything other than any of the above parties should be imputed as "OTHER". Remember to add properly the data after the previous recoding.
+
+8.  Party acronyms will be used for the visualizations. The inclusion of graphics will be highly valued (see <https://r-graph-gallery.com/>).
+
+9.  You must use all 4 data files at some point.
+
+10. You must define at least one (non-trivial) function of your own.
+
+11. You will have to discard mandatory polls that:
+
+```         
+-   refer to elections before 2008
+-   that are exit polls
+-   have a sample size of less than 750 or are unknown
+-   that have less than 1 or less fieldwork days
+```
+
+12. You must obligatorily answer the following questions (plus those that you consider analyzing to distinguish yourself from the rest of the teams, either numerically and/or graphically)
+
+```         
+-   Which party was the winner in the municipalities with more than 100,000 habitants (census) in each of the elections?
+-   Which party was the second when the first was the PSOE? And when the first was the PP?
+-   Who benefits from low turnout?
+-   How to analyze the relationship between census and vote? Is it true that certain parties win in rural areas?
+-   How to calibrate the error of the polls (remember that the polls are voting intentions at national level)?
+-   Which polling houses got it right the most and which ones deviated the most from the results?
+```
+
+**You should include at least 3 more "original" questions** that you think that it could be interesting to be answer with the data.
+
+### Marks
+
+**The one who does the most things will not be valued the most**. More is not always better. The **originality** (with respect to the rest of the works, for example in the analyzed or in the subject or ...) of what has been proposed, in the handling of tables (or in the visualization), the **caring** put in the delivery (care in life is important) and the **relevance** of what has been done will be valued. Once you have the mandatory items with your database more or less completed, **think before** chopping code: what could be interesting? What do I need to get a summary both numerical and visual?
+
+Remember that the real goal is to demonstrate a mastery of the tools seen throughout the course. And that happens not only by the quantity of them used but also by the quality when executing them.
+
+**Some dataviz will be extremely positive valued**.
+
+## Required packages
 
 > Insert in the lower chunk the packages you will need
 
 ```{r}
 rm(list = ls())
 library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(lubridate)
+library(DataExplorer)
+
 ```
 
-## Group task
-
-### Data
+## Data
 
 The practice will be based on the **electoral data archives** below, compiling data on elections to the Spanish Congress of Deputies from 2008 to the present, as well as surveys, municipalities codes and abbreviations.
 
@@ -46,7 +146,6 @@ abbrev <- read_csv(file = "./data/siglas.csv")
 The data will be as follows:
 
 -   `election_data`: file with election data for Congress from 2018 to the last ones in 2019.
-
     -   `tipo_eleccion`: type of election (02 if congressional election)
     -   `anno`, `mes`: year and month of elections
     -   `vuelta`: electoral round (1 if first round)
@@ -64,7 +163,6 @@ The data will be as follows:
 -   `abbrev`: acronyms and names associated with each party
 
 -   `surveys`: table of electoral polls since 1982. Some of the variables are the following:
-
     -   `type_survey`: type of survey (national, regional, etc.)
     -   `date_elec`: date of future elections
     -   `id_pollster`, `pollster`, `media`: id and name of the polling company, as well as the media that commissioned it.
@@ -74,88 +172,386 @@ The data will be as follows:
     -   `turnout`: turnout estimate
     -   estimated voting intentions for the main parties
 
-### Objectives and mandatory items
+### Cleaning the data -- surveys
 
-The objective of the delivery is to perform an analysis of the electoral data, carrying out the debugging, summaries and graphs you consider, both of their results and the accuracy of the electoral polls.
+```{r cleaning survey df}
 
-Specifically, **you must work only in the time window that includes the elections from 2008 to the last elections of 2019**.
+# Filter dataset
+cleaned_surveys <- surveys |>
+  mutate(
+    # Parse dates variables as date objects
+    field_date_from = ymd(field_date_from),
+    field_date_to = ymd(field_date_to),
+    date_elec = ymd(date_elec),
+    # Calculate the number of fieldwork days
+    fieldwork_days = as.numeric(field_date_to - field_date_from + 1)
+  ) |>
+  filter(
+    !exit_poll,                           # Exclude exit polls
+    date_elec >= ymd("2008-01-01"),       # Exclude polls referred to elections before 2008
+    size >= 750,                          # Exclude polls with sample size < 750
+    fieldwork_days > 1                    # Exclude polls with 1 or fewer fieldwork days
+  )
 
-#### General comments
+# Deleting columns that only have NAs
+cleaned_surveys <- cleaned_surveys |> 
+  select(where(~ !all(is.na(.))))
 
-In addition to what you see fit to execute, the following items are mandatory:
+# Identify party columns dynamically
+metadata_columns <- c("type_survey", "date_elec", "id_pollster", "pollster", "media",
+                      "field_date_from", "field_date_to", "fieldwork_days", "exit_poll", 
+                      "size", "turnout")
+party_columns <- setdiff(colnames(cleaned_surveys), metadata_columns)
 
--   Each group should **present before 9th January (23:59) an analysis of the data** in `.qmd` and `.html` format in **Quarto slides** mode, which **will be the ones they will present on the day of the presentation**.
+# Reshape data into long format
+tidy_surveys <- cleaned_surveys |>
+  pivot_longer(
+    cols = all_of(party_columns),  # Reshape party columns
+    names_to = "party_raw",        # Raw party names
+    values_to = "votes"            # Corresponding voting intentions
+  )
 
-- **Quarto slides should be uploaded to Github** (the link should be provided by a member of each group).
+#Old version:
+# tidy_surveys <- tidy_surveys |>
+#   mutate(
+#     party = case_when(
+#       str_detect(party_raw, "(?i)PSOE|PARTIDO SOCIALISTA") ~ "PARTIDO SOCIALISTA OBRERO ESPAÑOL",
+#       str_detect(party_raw, "(?i)CIUDADANOS|C’S") ~ "CIUDADANOS",
+#       str_detect(party_raw, "(?i)PNV|EAJ-PNV") ~ "PARTIDO NACIONALISTA VASCO",
+#       str_detect(party_raw, "(?i)BNG") ~ "BLOQUE NACIONALISTA GALLEGO",
+#       str_detect(party_raw, "(?i)CIU|CONVERGÈNCIA|UNIÓ") ~ "CONVERGÈNCIA I UNIÓ",
+#       str_detect(party_raw, "(?i)IU|PODEMOS|EZKER BATUA|UNIDAS PODEMOS") ~ "UNIDAS PODEMOS - IU",
+#       str_detect(party_raw, "(?i)ERC|ESQUERRA") ~ "ESQUERRA REPUBLICANA DE CATALUNYA",
+#       str_detect(party_raw, "(?i)SORTU|EUSKO ALKARTASUNA|ARALAR|ALTERNATIBA|EH BILDU") ~ "EH - BILDU",
+#       str_detect(party_raw, "(?i)MÁS PAÍS") ~ "MÁS PAÍS",
+#       str_detect(party_raw, "(?i)VOX") ~ "VOX",
+#       TRUE ~ "OTHER"
+#     )
+#   )
 
-- The **maximum number of slides** should be 40. The **maximum time for each group** will be 20-22 minutes (+5 minutes for questions).
 
--   During the presentation you will **explain (summarised!) the analysis performed** so that **each team member speaks for a similar amount of time** and **each member can be asked about any of the steps**. The grade does not have to be the same for all members. 
+# AMAIUR - EH - BILDU ???
+# NA-SUMA - PARTIDO POPULAR??? CIUDADANOS???
+tidy_surveys <- tidy_surveys %>%
+  mutate(
+    party = case_when(
+      party_raw == "PSOE" ~ "PARTIDO SOCIALISTA OBRERO ESPAÑOL",
+      party_raw == "CIU" ~ "CONVERGÈNCIA I UNIÓ",
+      party_raw == "EAJ-PNV" ~ "PARTIDO NACIONALISTA VASCO",
+      party_raw == "ERC" ~ "ESQUERRA REPUBLICANA DE CATALUNYA",
+      party_raw == "IU" ~ "UNIDAS PODEMOS - IU",
+      party_raw == "PP" ~ "PARTIDO POPULAR",
+      party_raw == "BNG" ~ "BLOQUE NACIONALISTA GALLEGO",
+      party_raw == "CS" ~ "CIUDADANOS",
+      party_raw == "EH-BILDU" ~ "EH-BILDU",
+      party_raw == "PODEMOS" ~ "UNIDAS PODEMOS - IU",
+      party_raw == "VOX" ~ "VOX",
+      party_raw == "MP" ~ "MÁS PAÍS",
+      TRUE ~ "OTHER")
+  )
 
--   It will be valued not only the content but also the container (aesthetics).
+# Create a column for proper, unqique acronyms
+tidy_surveys <- tidy_surveys |> 
+  mutate(
+    party_code = case_when(
+      party == "UNIDAS PODEMOS - IU"~ "PODEMOS-IU",
+      party == "OTHER"~ "OTHER",
+      TRUE ~ party_raw)
+  )
 
--   The **objective is to demonstrate that the maximum knowledge of the course has been acquired**: the more content of the syllabus is included, the better.
+# Select relevant columns
+# Getting rid of type_survey, exit_poll (take only 1 value), party_raw
+# Do we want to get rid of media as well? Or can it be useful?
+final_surveys <- tidy_surveys |>
+  select(-type_survey, -exit_poll, -party_raw) |> 
+  relocate(fieldwork_days, .after = field_date_to) |> 
+  relocate(votes, .after = party_code) 
 
-#### Mandatory items:
+# Summing all votes based on the party reclassification
+final_surveys <- final_surveys |> 
+  group_by(across(-votes)) |> 
+  summarize(votes = sum(votes, na.rm = TRUE), .groups = "drop") |> 
+  arrange(field_date_from)
+# We have 1614 surveys (rows from cleaned_surveys), 12 parties (meaning 12 rows per survey). Thus 1614x12=19368 rows
 
-1. Data should be **converted to tidydata** where appropriate.
+# Can we get rid of some rows? ex. the ones where votes == 0? Or would that be detrimental
 
-2. You should **include at least one join** between tables.
+# Preview
+tidy_surveys
+```
 
-3. Reminder: information = variance, so **remove columns that are not going to contribute anything**.
+### Cleaning the data -- election_data
 
-4. The **glue and lubridate** packages should be used at some point, as well as the **forcats**. The use of **ggplot2** will be highly valued.
+The election_data file is large and requires quite extensive cleaning to make it "tidy". We will tidy the data to try make it most useful for future analysis. The election data starts off with 48,737 rows and 471 columns. Reducing the number of columns is a clear priority. 
 
-5. The following should be used at least once:
-    -   mutate
-    -   summarise
-    -   group_by (or equivalent)
-    -   case_when
+First, we look at the quality of the data and see if any information is redundant and can be removed.
 
-6. We have many, many parties running for election. **We will only be interested in the following parties**:
+```{r check-electiondata-quality}
+plot_intro(election_data)
 
-    -   PARTIDO SOCIALISTA OBRERO ESPAÑOL (beware: it has/had federations - branches - with some other name).
-    -   PARTIDO POPULAR
-    -   CIUDADANOS (caution: has/had federations - branches - with some other name)
-    -   PARTIDO NACIONALISTA VASCO
-    -   BLOQUE NACIONALISTA GALLEGO
-    -   CONVERGÈNCIA I UNIÓ
-    -   UNIDAS PODEMOS - IU (beware that here they have had various names - IU, podem, ezker batua, ...- and have not always gone together, but here we will analyze them together)
-    -   ESQUERRA REPUBLICANA DE CATALUNYA
-    -   EH - BILDU (are now a coalition of parties formed by Sortu, Eusko Alkartasuna, Aralar, Alternatiba)
-    -   MÁS PAÍS
-    -   VOX
+# we see 1.9% missing colums, identify the cols with no data - we have 9 cols. 
+blank_cols <- names(election_data)[sapply(election_data, function(x) all(is.na(x)))]
 
-7. Anything other than any of the above parties should be imputed as "OTHER". Remember to add properly the data after the previous recoding.
+# drop these columns and also filter to ensure no info outside 2008 to 2019 is included. 
+election_data <- election_data |> 
+  select(-all_of(blank_cols)) |> 
+  filter(anno >= 2008 & anno <= 2019)
 
-8.   Party acronyms will be used for the visualizations. The inclusion of graphics will be highly valued (see <https://r-graph-gallery.com/>).
+# Drop columns that are logical
+election_data <- election_data %>%
+  select(where(~ !is.logical(.)))
+```
 
-9. You must use all 4 data files at some point.
+Second, we begin to make the election data tidy. We start by pivoting the data so all columns for party names are within one "party" variable. 
 
-10.  You must define at least one (non-trivial) function of your own.
+```{r pivot-election}
+# Pivot all the party names and ballot counts to the main table
+election_pivot <- election_data |> 
+  pivot_longer(
+    cols = `BERDEAK-LOS VERDES`:`COALICIÓN POR MELILLA`, # select all party data
+    names_to = "party",
+    values_to = "ballots"
+  )
+str(election_pivot)
+head(election_pivot)
+```
 
-11.  You will have to discard mandatory polls that:
+We now have a table with 21,785,439 rows and 17 columns. This is more clean than previously, but we still need to aggregate of our party variables into the main party groups. We will do this by creating a mapping table (party_names) that standardizes the raw party names into main party groupings (party_main) using regular expressions.
 
-    -   refer to elections before 2018
-    -   that are exit polls
-    -   have a sample size of less than 750 or are unknown
-    -   that have less than 1 or less fieldwork days
+```{r}
+# pull out all the party names so we can match to our main party groupings
+party_names <- tibble(names = unique(election_pivot$party)) |> 
+  arrange(names)
 
-12.   You must obligatorily answer the following questions (plus those that you consider analyzing to distinguish yourself from the rest of the teams, either numerically and/or graphically)
+# the party names in the election_data file do not match up perfectly with the abbrev file (around 120 different names of the 447 party names included here)
+# we use party names to create a joining key table, and then match this data onto our pivoted table, this was more efficent than the other options outlined below.
 
-    -   Which party was the winner in the municipalities with more than 100,000 habitants (census) in each of the elections?
-    -   Which party was the second when the first was the PSOE? And when the first was the PP?
-    -   Who benefits from low turnout?
-    -   How to analyze the relationship between census and vote? Is it true that certain parties win in rural areas?
-    -   How to calibrate the error of the polls (remember that the polls are voting intentions at national level)?
-    -   Which polling houses got it right the most and which ones deviated the most from the results?
+party_names <- party_names |> 
+    mutate(party_main = case_when(
+                str_detect(names, "(?i)PSOE|PARTIDO SOCIALISTA") ~ "PARTIDO SOCIALISTA OBRERO ESPAÑOL",
+                str_detect(names, "(?i)PP|PARTIDO POPULAR") ~ "PARTIDO POPULAR",
+                str_detect(names, "(?i)CIUDADANOS|C’S") ~ "CIUDADANOS",
+                str_detect(names, "(?i)PNV|EAJ-PNV") ~ "PARTIDO NACIONALISTA VASCO",
+                str_detect(names, "(?i)BNG") ~ "BLOQUE NACIONALISTA GALLEGO",
+                str_detect(names, "(?i)CIU|CONVERGÈNCIA|UNIÓ") ~ "CONVERGÈNCIA I UNIÓ",
+                str_detect(names, "(?i)IU|PODEMOS|EZKER BATUA|UNIDAS PODEMOS") ~ "UNIDAS PODEMOS - IU",
+                str_detect(names, "(?i)ERC|ESQUERRA") ~ "ESQUERRA REPUBLICANA DE CATALUNYA",
+                str_detect(names, "(?i)SORTU|EUSKO ALKARTASUNA|ARALAR|ALTERNATIBA|EH BILDU") ~ "EH - BILDU",
+                str_detect(names, "(?i)MÁS PAÍS") ~ "MÁS PAÍS",
+                str_detect(names, "(?i)VOX") ~ "VOX",
+                TRUE ~ "OTHER")
+    )
 
-**You should include at least 3 more "original" questions** that you think that it could be interesting to be answer with the data.
+# we now have our joining table to set our election data values
+party_names |> group_by(party_main) |> count()
 
-#### Marks
+```
 
-**The one who does the most things will not be valued the most**. More is not always better. The **originality** (with respect to the rest of the works, for example in the analyzed or in the subject or ...) of what has been proposed, in the handling of tables (or in the visualization), the **caring** put in the delivery (care in life is important) and the **relevance** of what has been done will be valued. Once you have the mandatory items with your database more or less completed, **think before** chopping code: what could be interesting? What do I need to get a summary both numerical and visual?
+We now have 11 groups for our party_main variable. We join this information onto our election pivot table.  
 
-Remember that the real goal is to demonstrate a mastery of the tools seen throughout the course. And that happens not only by the quantity of them used but also by the quality when executing them.
+*Logic for creating a key for the parties and joining on the data*
 
-**Some dataviz will be extremely positive valued**.
+Joining on names and pivoting was very intensive for the machine. This approach to create a join table and left_join on the party names was selected for efficiency over these 2 other options: 
+
+a) create rowwise summaries for each party group, then pivot_longer to get our summary data. The summing across columns should only call the specific columns includes, then add those values together (across the approx 49000 rows)
+
+b) If we pivot_longer first, then use case_when and str_detect to create our party_main variable directly on the pivot_longer data. 
+
+We do not include these results, but found that the join option was fastest, with pivot_longer then running the case when (b) next fastest, while the match and rowwise summaries across columns were incredibly slow. 
+
+```{r}
+# Join up all party characteristics to main and other
+# only join up ballot counts on the same elections
+
+election_pivot <- left_join(x=election_pivot, y=party_names, 
+                        by= join_by(party == names))
+
+```
+
+We now have a table of the almost 22 million rows and 18 variables. 
+
+Now we will include some additional information that will make the analysis potentially easier later, including province and valid vote counts from our data:
+
+``` {r join-provnames}
+# create municipal code to join on municipal names. 
+election_pivot <- election_pivot |>
+  mutate(cod_mun = paste(codigo_ccaa, codigo_provincia, codigo_municipio, sep="-"), # create municipio code to join
+         valid_votes = votos_candidaturas, 
+         invalid_votes = votos_blancos + votos_nulos,
+         total_votes = valid_votes + invalid_votes)
+
+# join municipality names and create vote count columns
+election_pivot <- left_join(election_pivot, cod_mun, by = join_by(cod_mun))  
+
+# check quality of the join and whether NA's have been introduced as municipality names
+table(is.na(election_pivot$municipio))
+
+```
+
+
+### Aggregate election ballot data to main party groups
+
+Now we need to group together all of the votes for "OTHER" variables and create unique identifiers for each individual election in our dataframes. 
+
+Currently we have a table of 23 variables with 21,785,439 rows. We can clean this more. 
+
+First, identify the redundant data in our election. We can remove:
+
+tipo_eleccion - because all values = 02. It is not useful
+vuelta = because all values = 1, it is not useful.
+geographic variables = we will remove `codigo_municipio` is included in `cod_mun` which we joined on from the *cod_mun* table. We keep the autonomous community and proivnce variables for potential future aggregation and analysis. 
+codigo_distrito_electoral - because every value is zero. It is not useful. 
+votos - we have created valid, invalid and total summary variables so will remove `votos_blancos` and `votos_candidaturas` and `votos_nulos`. We have grouped blancos and nulos together as they are deemed unuseful independently.  
+
+Notably, we have many NA ballot rows (21,388,704) and a row for each individual party at each election, where will also try to reduce this when we aggregate the party data with the "party_main" variable created. 
+
+```{r }
+summary(election_pivot)
+```
+
+To clean the data more, reduce our dataset and rename key variables so everything is more consistent in English.
+ 
+```{r tidy-election}
+tidy_election <- election_pivot |> 
+  select(year = anno, 
+         month = mes,
+         code_community = codigo_ccaa,
+         code_province = codigo_provincia,
+         code_municipality = cod_mun,
+         municipality = municipio,
+         total_votes,
+         valid_votes,
+         invalid_votes,
+         number_tables = numero_mesas,
+         population = censo,
+         participation_1 = participacion_1,
+         participation_2 = participacion_2,
+         party,
+         ballots,
+         party_main)
+
+```
+ 
+Now we group by each individual election to summarise the votes to each of the main parties. We can then drop the `party` variable in favour of keeping `party_main` only. We also lose the ballots variable as it becomes party_ballots in our summarise function. 
+ 
+We identify each election in each province by keeping the descriptive data for each election. Then summarise the number of ballots to each main party group. 
+ 
+```{r tidy-election-clean}
+
+tidy_election <- tidy_election |> 
+  group_by(year, 
+         month, 
+         code_community,
+         code_province,
+         code_municipality,
+         municipality,
+         total_votes,
+         valid_votes,
+         invalid_votes,
+         number_tables,
+         population,
+         participation_1,
+         participation_2,
+         # party,   # not included as we want to group by party_main
+         # ballots, # not included as we create our summary of votes by party_main
+         party_main) |> 
+  summarise(party_ballots = sum(ballots, na.rm=TRUE)) |> 
+  ungroup()
+
+tidy_election
+```
+
+We now have a tibble of 15 columns with 536,107 rows for analysis. This is much cleaner and faster than previous versions. Our current clean election_data table includes:
+
+Election identifiers: 
+
+Timing -> year, month
+  - Area information -> code_community (autonomous community), code_province, code_municipality, municipality, population
+  - General election information -> total_votes, valid_votes, invalid_votes, number_tables, participacion_1, participacion_2
+  - Party votes received -> party_main, party_ballots
+
+**For Isabel, Marco and Brad post-cleaning, describe out data status after cleaning at this stage:**
+
+We have 2 primary datasets at this stage, election data and survey data. 
+
+The survey data includes:
+
+  - 
+
+The election data includes:
+
+  - year
+  - month
+  - party name (with non-primary parties grouped in major)
+  - votes received for the party 
+  - 
+
+## Mandatory questions
+
+### 1.Which party was the winner in the municipalities with more than 100,000 habitants (census) in each of the elections?
+
+```{r}
+
+```
+
+
+### 2. Which party was the second when the first was the PSOE? And when the first was the PP?
+
+```{r}
+
+```
+
+### 3. Who benefits from low turnout?
+
+```{r}
+
+```
+
+### 4. How to analyze the relationship between census and vote? Is it true that certain parties win in rural areas?
+
+```{r}
+
+```
+
+### 5. How to calibrate the error of the polls (remember that the polls are voting intentions at national level)?
+
+```{r}
+
+```
+
+
+### 6. Which polling houses got it right the most and which ones deviated the most from the results?
+
+```{r}
+
+```
+
+## Additional questions
+
+SOME IDEAS FOR THE ORIGINAL QUESTIONS TO START?
+
+-   Which regions had the most predictable votes (i.e. consistently voted for the same party) and which regions were the most undecided (i.e. had the most variance in there votes across) between the 2008 and 2019 elections?
+
+- Map the outcomes over time - plotly on the results? Not sure as I didn't do a map
+
+- Can we load in other data? think that would go down well? Maybe predict the next election results based on previous trends of the 5 years and compare to see if the following election followed the trend? Think Javi would be happy with new data. 
+
+### 7. Jacklyn and Linghan
+
+```{r}
+
+```
+
+### 8. Yijia and Diego 
+
+```{r}
+
+```
+
+
+### 7. Marco, Isabel, Brad
+
+```{r}
+
+```
+
