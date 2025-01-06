@@ -235,7 +235,7 @@ tidy_surveys <- tidy_surveys %>%
       party_raw == "PP" ~ "PARTIDO POPULAR",
       party_raw == "BNG" ~ "BLOQUE NACIONALISTA GALLEGO",
       party_raw == "CS" ~ "CIUDADANOS",
-      party_raw == "EH-BILDU" ~ "EH-BILDU",
+      party_raw == "EH-BILDU" ~ "EH - BILDU",
       party_raw == "PODEMOS" ~ "UNIDAS PODEMOS - IU",
       party_raw == "VOX" ~ "VOX",
       party_raw == "MP" ~ "MÁS PAÍS",
@@ -271,6 +271,16 @@ final_surveys <- final_surveys |>
 # Preview
 tidy_surveys
 ```
+### Creating table for party codes
+
+Creating a table to link each party name to its unique code
+
+```{r}
+party_info <- final_surveys |> 
+  select(party, party_code) |> 
+  unique()
+```
+
 
 ### Cleaning the data -- election_data
 
@@ -308,38 +318,53 @@ str(election_pivot)
 head(election_pivot)
 ```
 
-We now have a table with 21,785,439 rows and 17 columns. This is more clean than previously, but we still need to aggregate of our party variables into the main party groups. We will do this by creating a mapping table (party_names) that standardizes the raw party names into main party groupings (party_main) using regular expressions.
+We now have a table with 20,177,118 rows and 17 columns. 
 
-```{r}
-# pull out all the party names so we can match to our main party groupings
-party_names <- tibble(names = unique(election_pivot$party)) |> 
-  arrange(names)
+Diego things to do:
+1- Check str_detect is working well
+2- Delete column tipo_eleccion and vuelta, codigo_distrito_electoral
+3- Collapse year and month into one single column
+4- Split the dataset in 2:
+      a. one containing all the votes split by parties for every election, and every municipality (just like now but getting rid of the columns votos_blancos, voto_nullos, votos_candidaturas since they are coded at a different level)
+      b. the other contains the column votos_blancos, voto_nullos, votos_candidaturas (which are coded as the total of those types of votes in that election in that particular municipality)
+      
+Some have been done below check afterwards
 
-# the party names in the election_data file do not match up perfectly with the abbrev file (around 120 different names of the 447 party names included here)
-# we use party names to create a joining key table, and then match this data onto our pivoted table, this was more efficent than the other options outlined below.
+
+This is more clean than previously, but we still need to aggregate of our party variables into the main party groups. We will do this by creating a mapping table (party_names) that standardizes the raw party names into main party groupings (party_main) using regular expressions.
+
+```{r assigning-partygroup}
+party_names <- tibble(names = unique(election_pivot$party))
+
+# Party names in the election_data file do not match up perfectly with the abbrev file (i.e. some of the names present in party_names are not in abbrev)
+# So it is better to work directly on party_names instead of using abbrev
 
 party_names <- party_names |> 
     mutate(party_main = case_when(
-                str_detect(names, "(?i)PSOE|PARTIDO SOCIALISTA") ~ "PARTIDO SOCIALISTA OBRERO ESPAÑOL",
-                str_detect(names, "(?i)PP|PARTIDO POPULAR") ~ "PARTIDO POPULAR",
-                str_detect(names, "(?i)CIUDADANOS|C’S") ~ "CIUDADANOS",
-                str_detect(names, "(?i)PNV|EAJ-PNV") ~ "PARTIDO NACIONALISTA VASCO",
-                str_detect(names, "(?i)BNG") ~ "BLOQUE NACIONALISTA GALLEGO",
-                str_detect(names, "(?i)CIU|CONVERGÈNCIA|UNIÓ") ~ "CONVERGÈNCIA I UNIÓ",
-                str_detect(names, "(?i)IU|PODEMOS|EZKER BATUA|UNIDAS PODEMOS") ~ "UNIDAS PODEMOS - IU",
-                str_detect(names, "(?i)ERC|ESQUERRA") ~ "ESQUERRA REPUBLICANA DE CATALUNYA",
-                str_detect(names, "(?i)SORTU|EUSKO ALKARTASUNA|ARALAR|ALTERNATIBA|EH BILDU") ~ "EH - BILDU",
+                str_detect(names, "(?i)PSOE|PARTIDO DOS SOCIALISTAS DE GALICIA|PARTIDO SOCIALISTA DE EUSKADI|PARTIDO SOCIALISTA OBRERO ESPAÑOL| PARTIT SOCIALISTA OBRER ESPANYOL") ~ "PARTIDO SOCIALISTA OBRERO ESPAÑOL",
+                str_detect(names, "(?i)PARTIDO POPULAR") ~ "PARTIDO POPULAR",
+                str_detect(names, "(?i)CIUDADANOS-PARTIDO DE LA CIUDADANIA|CIUDADANOS-PARTIDO DE LA CIUDADANÍA|CIUDADANOS PARTIDO DE LA CIUDADANIA|CIUDADANOS PARTIDO DE LA CIUDADANÍA|CIUDADANOS, PARTIDO DE LA CIUDADANÍA|CIUTADANS") ~ "CIUDADANOS",
+                str_detect(names, "(?i)EUZKO ALDERDI JELTZALEA-PARTIDO NACIONALISTA VASCO") ~ "PARTIDO NACIONALISTA VASCO",
+                str_detect(names, "(?i)BLOQUE NACIONALISTA GALEGO|BNG") ~ "BLOQUE NACIONALISTA GALLEGO",
+                str_detect(names, "(?i)CONVERGENCIA I UNIO|CONVERGÈNCIA i UNIÓ|	
+CONVERGÈNCIA I UNIÓ") ~ "CONVERGÈNCIA I UNIÓ",
+                str_detect(names, "(?i)PODEM|EZKER BATUA|EZKER ANITZA|IZQUIERDA UNIDA|ESQUERRA UNIDA|ESQUERDA UNIDA") ~ "UNIDAS PODEMOS - IU",
+                str_detect(names, "(?i)ESQUERRA REPUBLICANA") ~ "ESQUERRA REPUBLICANA DE CATALUNYA",
+                str_detect(names, "(?i)BILDU|EUSKO ALKARTASUNA|ARALAR|SORTU|ALTERNATIBA") ~ "EH - BILDU",
                 str_detect(names, "(?i)MÁS PAÍS") ~ "MÁS PAÍS",
                 str_detect(names, "(?i)VOX") ~ "VOX",
                 TRUE ~ "OTHER")
     )
 
-# we now have our joining table to set our election data values
-party_names |> group_by(party_main) |> count()
+unique(party_names$party_main)
 
+# Adding party code to party_names dataframe
+party_names <- party_names |> 
+  left_join(party_info, by = join_by(party_main == party))
 ```
 
-We now have 11 groups for our party_main variable. We join this information onto our election pivot table.  
+---------------------
+Old notes (can we get rid of them?): 
 
 *Logic for creating a key for the parties and joining on the data*
 
@@ -351,16 +376,14 @@ b) If we pivot_longer first, then use case_when and str_detect to create our par
 
 We do not include these results, but found that the join option was fastest, with pivot_longer then running the case when (b) next fastest, while the match and rowwise summaries across columns were incredibly slow. 
 
-```{r}
-# Join up all party characteristics to main and other
-# only join up ballot counts on the same elections
-
-election_pivot <- left_join(x=election_pivot, y=party_names, 
-                        by= join_by(party == names))
-
-```
-
 We now have a table of the almost 22 million rows and 18 variables. 
+---------------------
+
+```{r join-partygroup}
+# Join up all party characteristics to main and other
+election_pivot <- election_pivot |> 
+  left_join(party_names, by = join_by(party == names))
+```
 
 Now we will include some additional information that will make the analysis potentially easier later, including province and valid vote counts from our data:
 
