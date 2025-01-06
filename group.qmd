@@ -269,7 +269,7 @@ final_surveys <- final_surveys |>
 # Can we get rid of some rows? ex. the ones where votes == 0? Or would that be detrimental
 
 # Preview
-tidy_surveys
+final_surveys
 ```
 
 ### Creating table for party codes
@@ -357,7 +357,8 @@ party_names <- party_names |>
   left_join(party_info, by = join_by(party_main == party))
 ```
 
----------------------
+---
+
 Old notes (can we get rid of them?): 
 
 *Logic for creating a key for the parties and joining on the data*
@@ -371,7 +372,8 @@ b) If we pivot_longer first, then use case_when and str_detect to create our par
 We do not include these results, but found that the join option was fastest, with pivot_longer then running the case when (b) next fastest, while the match and rowwise summaries across columns were incredibly slow. 
 
 We now have a table of the almost 22 million rows and 18 variables. 
----------------------
+
+---
 
 ```{r join-partygroup}
 # Join party main and party code into main df
@@ -454,6 +456,29 @@ tidy_election <- tidy_election |>
 tidy_election
 ```
 
+Joining year and month into one variable
+
+```{r creating-date-variable}
+final_election <- tidy_election |> 
+  mutate(date_elec = paste(year, month, "01", sep = "-")) |> 
+  relocate(date_elec, .before = year) |> 
+  select(-year, -month)
+
+#Adding correct days to match survey dataframe
+final_election <- final_election |> 
+  mutate(
+    date_elec = ymd(case_when(
+      date_elec == "2008-03-01" ~ "2008-03-09",
+      date_elec == "2011-11-01" ~ "2011-11-20",
+      date_elec == "2015-12-01" ~ "2015-12-20",
+      date_elec == "2016-06-01" ~ "2016-06-26",
+      date_elec == "2019-04-01" ~ "2019-04-28",
+      date_elec == "2019-11-01" ~ "2019-11-10"))
+  )
+
+str(final_election)
+```
+
 Election identifiers: 
 
   - Timing -> date
@@ -461,9 +486,28 @@ Election identifiers:
   - General election information -> number_tables, participacion_1, participacion_2, blank_votes, null_votes, valid_votes, total_votes
   - Party votes received -> party_main, party_code, party_ballots
 
-**For Isabel, Marco and Brad post-cleaning, describe out data status after cleaning at this stage:**
+### Creating turnout dataframe
 
-We have 2 primary datasets at this stage, election data and survey data. 
+Creating a dataframe storing all the turnout data for each municipality in each election in case we need to work just on turnout or other data that does not change by party.
+
+All this info is still included in final_election
+
+```{r}
+turnout <- final_election |> 
+  select(
+    date_elec, code_community, code_province, code_municipality, municipality,
+    population, number_tables, participation_1, participation_2, 
+    blank_votes, null_votes, valid_votes, total_votes
+  ) |> 
+  distinct()
+turnout
+```
+
+### Recap cleaning
+
+*For Isabel, Marco and Brad post-cleaning, describe out data status after cleaning at this stage:*
+
+We have 2 primary datasets at this stage, election data and survey data, plus a turnout dataframe which is a subset of the election data.
 
 The survey data includes:
 
@@ -475,6 +519,10 @@ The election data includes:
   - party name, party code (with non-primary parties grouped in major)
   - votes received for each party 
   - ...
+  
+**!!!!!!! WORK ON DATAFRAMES final_surveys, final_election, turnout !!!!!!!**  
+**!!!!!!! DO NOT OVERWRITE THESE DATAFRAMES, CREATE NEW ONES IF YOU NEED TO MODIFY THEM (ex. surveys_q1 <- final_surveys) !!!!!!!**
+
 
 ## Mandatory questions
 
