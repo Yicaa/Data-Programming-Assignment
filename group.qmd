@@ -16,7 +16,7 @@ format:
     toc-title: Índice
     embed-resources: true
 ---
-<<<<<<< HEAD
+
 ## Instructions (read before starting)
 =======
 
