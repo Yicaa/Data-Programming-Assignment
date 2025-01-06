@@ -203,27 +203,7 @@ tidy_surveys <- cleaned_surveys |>
     values_to = "votes"            # Corresponding voting intentions
   )
 
-#Old version:
-# tidy_surveys <- tidy_surveys |>
-#   mutate(
-#     party = case_when(
-#       str_detect(party_raw, "(?i)PSOE|PARTIDO SOCIALISTA") ~ "PARTIDO SOCIALISTA OBRERO ESPAÑOL",
-#       str_detect(party_raw, "(?i)CIUDADANOS|C’S") ~ "CIUDADANOS",
-#       str_detect(party_raw, "(?i)PNV|EAJ-PNV") ~ "PARTIDO NACIONALISTA VASCO",
-#       str_detect(party_raw, "(?i)BNG") ~ "BLOQUE NACIONALISTA GALLEGO",
-#       str_detect(party_raw, "(?i)CIU|CONVERGÈNCIA|UNIÓ") ~ "CONVERGÈNCIA I UNIÓ",
-#       str_detect(party_raw, "(?i)IU|PODEMOS|EZKER BATUA|UNIDAS PODEMOS") ~ "UNIDAS PODEMOS - IU",
-#       str_detect(party_raw, "(?i)ERC|ESQUERRA") ~ "ESQUERRA REPUBLICANA DE CATALUNYA",
-#       str_detect(party_raw, "(?i)SORTU|EUSKO ALKARTASUNA|ARALAR|ALTERNATIBA|EH BILDU") ~ "EH - BILDU",
-#       str_detect(party_raw, "(?i)MÁS PAÍS") ~ "MÁS PAÍS",
-#       str_detect(party_raw, "(?i)VOX") ~ "VOX",
-#       TRUE ~ "OTHER"
-#     )
-#   )
-
-
-# AMAIUR - EH - BILDU ???
-# NA-SUMA - PARTIDO POPULAR??? CIUDADANOS???
+# add on party names by code
 tidy_surveys <- tidy_surveys %>%
   mutate(
     party = case_when(
@@ -253,7 +233,6 @@ tidy_surveys <- tidy_surveys |>
 
 # Select relevant columns
 # Getting rid of type_survey, exit_poll (take only 1 value), party_raw
-# Do we want to get rid of media as well? Or can it be useful?
 final_surveys <- tidy_surveys |>
   select(-type_survey, -exit_poll, -party_raw) |> 
   relocate(fieldwork_days, .after = field_date_to) |> 
@@ -265,8 +244,6 @@ final_surveys <- final_surveys |>
   summarize(votes = sum(votes, na.rm = TRUE), .groups = "drop") |> 
   arrange(field_date_from)
 # We have 1614 surveys (rows from cleaned_surveys), 12 parties (meaning 12 rows per survey). Thus 1614x12=19368 rows
-
-# Can we get rid of some rows? ex. the ones where votes == 0? Or would that be detrimental
 
 # Preview
 final_surveys
@@ -357,23 +334,7 @@ party_names <- party_names |>
   left_join(party_info, by = join_by(party_main == party))
 ```
 
----
-
-Old notes (can we get rid of them?): 
-
-*Logic for creating a key for the parties and joining on the data*
-
-Joining on names and pivoting was very intensive for the machine. This approach to create a join table and left_join on the party names was selected for efficiency over these 2 other options: 
-
-a) create rowwise summaries for each party group, then pivot_longer to get our summary data. The summing across columns should only call the specific columns includes, then add those values together (across the approx 49000 rows)
-
-b) If we pivot_longer first, then use case_when and str_detect to create our party_main variable directly on the pivot_longer data. 
-
-We do not include these results, but found that the join option was fastest, with pivot_longer then running the case when (b) next fastest, while the match and rowwise summaries across columns were incredibly slow. 
-
-We now have a table of the almost 22 million rows and 18 variables. 
-
----
+Now join on the main party names and codes to our election table. Testing was undertaken and the join of a table was more efficient than alternatives (e.g. str_detects over election_pivot or rowwise summaries).
 
 ```{r join-partygroup}
 # Join party main and party code into main df
@@ -434,7 +395,7 @@ tidy_election <- election_pivot |>
          code_municipality = cod_mun,
          municipality = municipio,
          population = censo,
-         number_tables = numero_mesas,
+         polling_stations = numero_mesas,
          participation_1 = participacion_1,
          participation_2 = participacion_2,
          blank_votes = votos_blancos,
@@ -483,7 +444,7 @@ Election identifiers:
 
   - Timing -> date
   - Area information -> code_community (autonomous community), code_province, code_municipality, municipality, population
-  - General election information -> number_tables, participacion_1, participacion_2, blank_votes, null_votes, valid_votes, total_votes
+  - General election information -> polling_stations, participation_1, participation_2, blank_votes, null_votes, valid_votes, total_votes
   - Party votes received -> party_main, party_code, party_ballots
 
 ### Creating turnout dataframe
@@ -496,7 +457,7 @@ All this info is still included in final_election
 turnout <- final_election |> 
   select(
     date_elec, code_community, code_province, code_municipality, municipality,
-    population, number_tables, participation_1, participation_2, 
+    population, polling_stations, participation_1, participation_2, 
     blank_votes, null_votes, valid_votes, total_votes
   ) |> 
   distinct()
@@ -505,21 +466,30 @@ turnout
 
 ### Recap cleaning
 
-*For Isabel, Marco and Brad post-cleaning, describe out data status after cleaning at this stage:*
+We have 2 primary datasets at this stage, election data and survey data, plus a turnout dataframe which is a subset of the election data. For surveys, the data has been cleaned so each row represents the votes for one party within a specific national poll. For elections, the data has been cleaned so each row represents the number of votes for a party within an election in a specific municipality. 
 
-We have 2 primary datasets at this stage, election data and survey data, plus a turnout dataframe which is a subset of the election data.
+The `final_surveys` data includes:
 
-The survey data includes:
-
-  - ...
-
-The election data includes:
-
-  - date
-  - party name, party code (with non-primary parties grouped in major)
-  - votes received for each party 
-  - ...
+  - election date, pollster and media information, fieldwork dates
+  - size of the survey and turnout
+  - party name, party code
+  - votes received (for that party in that poll)
   
+The `final_election` data includes:
+
+  - date of the election
+  - party name, party code (with non-primary parties grouped)
+  - identifier for autonomous community, province and municipality
+  - municipality population
+  - election information such as number of polling stations, votes per session
+  - ballots received (for that party per election in each municipality)
+
+  
+The `turnout` data includes:
+
+  - information on the number of votes and type of vote (e.g. valid or blank/null) per municipality in each election.  
+
+
 **!!!!!!! WORK ON DATAFRAMES final_surveys, final_election, turnout !!!!!!!**  
 **!!!!!!! DO NOT OVERWRITE THESE DATAFRAMES, CREATE NEW ONES IF YOU NEED TO MODIFY THEM (ex. surveys_q1 <- final_surveys) !!!!!!!**
 
@@ -566,13 +536,20 @@ The election data includes:
 
 ## Additional questions
 
+Confirm with the group your original analysis question to avoid clashing ideas :) 
+
+
 SOME IDEAS FOR THE ORIGINAL QUESTIONS TO START?
 
 -   Which regions had the most predictable votes (i.e. consistently voted for the same party) and which regions were the most undecided (i.e. had the most variance in there votes across) between the 2008 and 2019 elections?
 
-- Map the outcomes over time - plotly on the results? Not sure as I didn't do a map
+- Map the outcomes over time - plotly on the results? Isabelle has some interest but tbc if we will Map. 
 
 - Can we load in other data? think that would go down well? Maybe predict the next election results based on previous trends of the 5 years and compare to see if the following election followed the trend? Think Javi would be happy with new data. 
+
+- Which municipalities voting patterns were most consistent with the national trends? 
+
+- Which 2 media/pollster outlets had the most polarized estimates of each election? 
 
 ### 7. Jacklyn and Linghan
 
