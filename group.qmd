@@ -138,6 +138,7 @@ abbrev <- read_csv(file = "./data/siglas.csv")
 The data will be as follows:
 
 -   `election_data`: file with election data for Congress from 2018 to the last ones in 2019.
+
     -   `tipo_eleccion`: type of election (02 if congressional election)
     -   `anno`, `mes`: year and month of elections
     -   `vuelta`: electoral round (1 if first round)
@@ -155,6 +156,7 @@ The data will be as follows:
 -   `abbrev`: acronyms and names associated with each party
 
 -   `surveys`: table of electoral polls since 1982. Some of the variables are the following:
+
     -   `type_survey`: type of survey (national, regional, etc.)
     -   `date_elec`: date of future elections
     -   `id_pollster`, `pollster`, `media`: id and name of the polling company, as well as the media that commissioned it.
@@ -259,10 +261,9 @@ party_info <- final_surveys |>
   unique()
 ```
 
-
 ### Cleaning the data -- election_data
 
-The election_data file is large and requires quite extensive cleaning to make it "tidy". We will tidy the data to try make it most useful for future analysis. The election data starts off with 48,737 rows and 471 columns. Reducing the number of columns is a clear priority. 
+The election_data file is large and requires quite extensive cleaning to make it "tidy". We will tidy the data to try make it most useful for future analysis. The election data starts off with 48,737 rows and 471 columns. Reducing the number of columns is a clear priority.
 
 First, we look at the quality of the data and see if any information is redundant and can be removed.
 
@@ -301,7 +302,7 @@ str(election_pivot)
 head(election_pivot)
 ```
 
-We now have a table with 20,177,118 rows and 17 columns. 
+We now have a table with 20,177,118 rows and 17 columns.
 
 This is more clean than previously, but we still need to aggregate of our party variables into the main party groups. We will do this by creating a mapping table (party_names) that standardizes the raw party names into main party groupings (party_main) using regular expressions.
 
@@ -344,7 +345,7 @@ election_pivot <- election_pivot |>
 
 Now we will include some additional information that will make the analysis potentially easier later, including province and total votes counts from our data:
 
-``` {r join-municipality-names}
+```{r join-municipality-names}
 # Create municipal code to join on municipal names. 
 # Create total votes column
 election_pivot <- election_pivot |>
@@ -372,19 +373,16 @@ n_distinct(cod_mun$cod_mun)
 n_distinct(cod_mun$municipio)
 ```
 
-Now we need to group together all of the votes for "OTHER" variables and create unique identifiers for each individual election in our dataframes. 
+Now we need to group together all of the votes for "OTHER" variables and create unique identifiers for each individual election in our dataframes.
 
-Currently we have a table of 22 variables with 20,177,118 rows. We can clean this more. 
+Currently we have a table of 22 variables with 20,177,118 rows. We can clean this more.
 
 First, identify the redundant data in our election. We can remove:
 
-tipo_eleccion - because all values = 02. It is not useful
-vuelta = because all values = 1, it is not useful.
-geographic variables = we will remove `codigo_municipio` is included in `cod_mun` which we joined on from the *cod_mun* table. We keep the autonomous community and proivnce variables for potential future aggregation and analysis. 
-codigo_distrito_electoral - because every value is zero. It is not useful. 
+tipo_eleccion - because all values = 02. It is not useful vuelta = because all values = 1, it is not useful. geographic variables = we will remove `codigo_municipio` is included in `cod_mun` which we joined on from the *cod_mun* table. We keep the autonomous community and proivnce variables for potential future aggregation and analysis. codigo_distrito_electoral - because every value is zero. It is not useful.
 
-Notably, we have many NA ballot rows and a row for each individual party at each election, where will also try to reduce this when we aggregate the party data with the "party_main" variable created. 
- 
+Notably, we have many NA ballot rows and a row for each individual party at each election, where will also try to reduce this when we aggregate the party data with the "party_main" variable created.
+
 ```{r tidy-election-selecting-variables}
 # To clean the data more, reduce our dataset and rename key variables so everything is more consistent in English
 tidy_election <- election_pivot |> 
@@ -408,7 +406,7 @@ tidy_election <- election_pivot |>
 
 summary(tidy_election)
 ```
- 
+
 ```{r tidy-election-aggregating parties}
 tidy_election <- tidy_election |> 
   group_by(across(-ballots))|> 
@@ -440,12 +438,12 @@ final_election <- final_election |>
 str(final_election)
 ```
 
-Election identifiers: 
+Election identifiers:
 
-  - Timing -> date
-  - Area information -> code_community (autonomous community), code_province, code_municipality, municipality, population
-  - General election information -> polling_stations, participation_1, participation_2, blank_votes, null_votes, valid_votes, total_votes
-  - Party votes received -> party_main, party_code, party_ballots
+-   Timing -\> date
+-   Area information -\> code_community (autonomous community), code_province, code_municipality, municipality, population
+-   General election information -\> polling_stations, participation_1, participation_2, blank_votes, null_votes, valid_votes, total_votes
+-   Party votes received -\> party_main, party_code, party_ballots
 
 ### Creating turnout dataframe
 
@@ -466,33 +464,30 @@ turnout
 
 ### Recap cleaning
 
-We have 2 primary datasets at this stage, election data and survey data, plus a turnout dataframe which is a subset of the election data. For surveys, the data has been cleaned so each row represents the votes for one party within a specific national poll. For elections, the data has been cleaned so each row represents the number of votes for a party within an election in a specific municipality. 
+We have 2 primary datasets at this stage, election data and survey data, plus a turnout dataframe which is a subset of the election data. For surveys, the data has been cleaned so each row represents the votes for one party within a specific national poll. For elections, the data has been cleaned so each row represents the number of votes for a party within an election in a specific municipality.
 
 The `final_surveys` data includes:
 
-  - election date, pollster and media information, fieldwork dates
-  - size of the survey and turnout
-  - party name, party code
-  - votes received (for that party in that poll)
-  
+-   election date, pollster and media information, fieldwork dates
+-   size of the survey and turnout
+-   party name, party code
+-   votes received (for that party in that poll)
+
 The `final_election` data includes:
 
-  - date of the election
-  - party name, party code (with non-primary parties grouped)
-  - identifier for autonomous community, province and municipality
-  - municipality population
-  - election information such as number of polling stations, votes per session
-  - ballots received (for that party per election in each municipality)
+-   date of the election
+-   party name, party code (with non-primary parties grouped)
+-   identifier for autonomous community, province and municipality
+-   municipality population
+-   election information such as number of polling stations, votes per session
+-   ballots received (for that party per election in each municipality)
 
-  
 The `turnout` data includes:
 
-  - information on the number of votes and type of vote (e.g. valid or blank/null) per municipality in each election.  
+-   information on the number of votes and type of vote (e.g. valid or blank/null) per municipality in each election.
 
-
-**!!!!!!! WORK ON DATAFRAMES final_surveys, final_election, turnout !!!!!!!**  
-**!!!!!!! DO NOT OVERWRITE THESE DATAFRAMES, CREATE NEW ONES IF YOU NEED TO MODIFY THEM (ex. surveys_q1 <- final_surveys) !!!!!!!**
-
+**!!!!!!! WORK ON DATAFRAMES final_surveys, final_election, turnout !!!!!!!**\
+**!!!!!!! DO NOT OVERWRITE THESE DATAFRAMES, CREATE NEW ONES IF YOU NEED TO MODIFY THEM (ex. surveys_q1 \<- final_surveys) !!!!!!!**
 
 ## Mandatory questions
 
@@ -501,7 +496,6 @@ The `turnout` data includes:
 ```{r}
 
 ```
-
 
 ### 2. Which party was the second when the first was the PSOE? And when the first was the PP?
 
@@ -527,7 +521,6 @@ The `turnout` data includes:
 
 ```
 
-
 ### 6. Which polling houses got it right the most and which ones deviated the most from the results?
 
 ```{r}
@@ -536,20 +529,19 @@ The `turnout` data includes:
 
 ## Additional questions
 
-Confirm with the group your original analysis question to avoid clashing ideas :) 
-
+Confirm with the group your original analysis question to avoid clashing ideas :)
 
 SOME IDEAS FOR THE ORIGINAL QUESTIONS TO START?
 
 -   Which regions had the most predictable votes (i.e. consistently voted for the same party) and which regions were the most undecided (i.e. had the most variance in there votes across) between the 2008 and 2019 elections?
 
-- Map the outcomes over time - plotly on the results? Isabelle has some interest but tbc if we will Map. 
+-   Map the outcomes over time - plotly on the results? Isabelle has some interest but tbc if we will Map.
 
-- Can we load in other data? think that would go down well? Maybe predict the next election results based on previous trends of the 5 years and compare to see if the following election followed the trend? Think Javi would be happy with new data. 
+-   Can we load in other data? think that would go down well? Maybe predict the next election results based on previous trends of the 5 years and compare to see if the following election followed the trend? Think Javi would be happy with new data.
 
-- Which municipalities voting patterns were most consistent with the national trends? 
+-   Which municipalities voting patterns were most consistent with the national trends?
 
-- Which 2 media/pollster outlets had the most polarized estimates of each election? 
+-   Which 2 media/pollster outlets had the most polarized estimates of each election?
 
 ### 7. Jacklyn and Linghan
 
@@ -557,16 +549,14 @@ SOME IDEAS FOR THE ORIGINAL QUESTIONS TO START?
 
 ```
 
-### 8. Yijia and Diego 
+### 8. Yijia and Diego
 
 ```{r}
 
 ```
-
 
 ### 7. Marco, Isabel, Brad
 
 ```{r}
 
 ```
-
