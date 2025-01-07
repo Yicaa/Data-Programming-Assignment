@@ -919,8 +919,39 @@ The `turnout` data includes:
 ### 3. Who benefits from low turnout?
 
 ```{r}
+#Calculate the Low Turnout Threshold
+turnout2 <- final_election |> 
+  mutate(actual_turnout= (total_votes / population) * 100)
 
+low_turnout_threshold <- quantile(turnout2$actual_turnout, 0.25, na.rm = TRUE)
+#Filter Low Turnout Data
+low_turnout_data <- turnout2 |> 
+  #drop_na() |> 
+  filter(actual_turnout < low_turnout_threshold)
+#Summarize Votes by Party
+low_turnout_summary <- low_turnout_data |> 
+  group_by(party_code) |> 
+ summarise(
+    total_ballots = sum(party_ballots, na.rm = TRUE),
+    vote_share = (total_ballots / sum(low_turnout_data$party_ballots)) * 100) 
+#data visualization
+ggplot(low_turnout_summary, aes(x = reorder(party_code, -vote_share), y = vote_share, fill = party_code)) +
+  geom_bar(stat = "identity", color = "black", width = 0.7) +
+  labs(
+    title = "Party Vote Share under Low Turnout (<25%)",
+    x = "Party",
+    y = "Vote Share (%)"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_brewer(palette = "Paired")
 ```
+
+Based on the chart, **Partido Popular(PP)** and **Partido Socialista Obrero Español(PSOE)** are the parties that benefit the most under low turnout conditions. These two parties dominate the vote share, each capturing a significant proportion of the total votes in scenarios where voter turnout is below the 25th percentile.
+
+This suggests that these parties likely have:
+1. A Loyal Voter Base: Their supporters are more consistent and motivated to vote even under low turnout conditions.
+2. Established Organizational Structures: They might have stronger mechanisms to mobilize voters or a more stable electorate compared to smaller or less prominent parties.
 
 ### 4. How to analyze the relationship between census and vote? Is it true that certain parties win in rural areas?
 
@@ -957,9 +988,55 @@ SOME IDEAS FOR THE ORIGINAL QUESTIONS TO START?
 -   Which 2 media/pollster outlets had the most polarized estimates of each election?
 
 ### 7. Jacklyn and Linghan
+Do the survey projections of vote shares correspond to those of the actual elections? If there was a deviation, in which parties was it more pronounced?
 
 ```{r}
+# Define a function to process election and survey data
+process_election_data <- function(final_election, final_surveys) {
+  # Convert date columns to Date format
+  final_election$date_elec <- as.Date(final_election$date_elec)
+  final_surveys$date_elec <- as.Date(final_surveys$date_elec)
 
+  # Aggregate election data by party and calculate actual vote percentage
+  election_aggregated <- final_election %>%
+    group_by(party_code, party_main) %>%
+    summarise(
+      valid_votes = sum(valid_votes, na.rm = TRUE),
+      party_ballots = sum(party_ballots, na.rm = TRUE)
+    ) %>%
+    mutate(actual_vote_share = (party_ballots / valid_votes) * 100)
+
+  # Aggregate survey data by party and calculate average predicted vote percentage
+  survey_aggregated <- final_surveys %>%
+    group_by(party_code, party) %>%
+    summarise(predicted_vote_share = mean(votes, na.rm = TRUE))
+
+  # Merge aggregated election and survey data on party codes
+  merged_data <- merge(election_aggregated, survey_aggregated, by = "party_code")
+
+  # Calculate Prediction Bias
+  merged_data <- merged_data %>%
+    mutate(prediction_bias = predicted_vote_share - actual_vote_share)
+
+  return(merged_data)
+}
+
+# Call the function to process the data
+merged_data <- process_election_data(final_election, final_surveys)
+
+# Visualize the results
+merged_data %>%
+  mutate(party_main = fct_reorder(party_main, prediction_bias)) %>% # Reorder parties by bias
+  ggplot(aes(x = party_code, y = prediction_bias, fill = prediction_bias > 0)) +
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  coord_flip() +
+  labs(
+    title = "Prediction Bias by Party",
+    x = "Party",
+    y = "Prediction Bias (%)",
+    fill = "Positive Bias"
+  ) +
+  theme_minimal()
 ```
 
 ### 8. Yijia and Diego
