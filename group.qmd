@@ -500,8 +500,36 @@ The election data includes:
 ### 3. Who benefits from low turnout?
 
 ```{r}
-
+#Calculate the Low Turnout Threshold
+low_turnout_threshold <- quantile(tidy_surveys$turnout, 0.25, na.rm = TRUE)
+#Filter Low Turnout Data
+low_turnout_data <- tidy_surveys%>%
+  drop_na() |> 
+  filter(turnout < low_turnout_threshold)
+#Summarize Votes by Party
+low_turnout_summary <- low_turnout_data %>%
+  group_by(party) %>%
+  summarise(total_votes = sum(votes)) %>%
+  mutate(vote_share = (total_votes / sum(total_votes)) * 100)
+#data visualization
+ggplot(low_turnout_summary, aes(x = reorder(party, -vote_share), y = vote_share, fill = party)) +
+  geom_bar(stat = "identity", color = "black", width = 0.7) +
+  labs(
+    title = "Party Vote Share under Low Turnout (<25%)",
+    x = "Party",
+    y = "Vote Share (%)"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_brewer(palette = "Paired")
 ```
+
+Based on the chart, **Partido Popular** and **Partido Socialista Obrero Español** are the parties that benefit the most under low turnout conditions. These two parties dominate the vote share, each capturing a significant proportion of the total votes in scenarios where voter turnout is below the 25th percentile.
+
+This suggests that these parties likely have:
+1. **A Loyal Voter Base**: Their supporters are more consistent and motivated to vote even under low turnout conditions.
+2. **Established Organizational Structures**: They might have stronger mechanisms to mobilize voters or a more stable electorate compared to smaller or less prominent parties.
+
 
 ### 4. How to analyze the relationship between census and vote? Is it true that certain parties win in rural areas?
 
