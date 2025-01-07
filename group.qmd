@@ -18,8 +18,6 @@ format:
 ---
 
 ## Instructions (read before starting)
-=======
-
 ## Objectives and mandatory items
 
 The objective of the delivery is to perform an analysis of the electoral data, carrying out the debugging, summaries and graphs you consider, both of their results and the accuracy of the electoral polls.
