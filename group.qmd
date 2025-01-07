@@ -120,7 +120,7 @@ library(tidyr)
 library(stringr)
 library(lubridate)
 library(DataExplorer)
-
+library(glue)
 ```
 
 ## Data
@@ -419,7 +419,7 @@ Joining year and month into one variable
 
 ```{r creating-date-variable}
 final_election <- tidy_election |> 
-  mutate(date_elec = paste(year, month, "01", sep = "-")) |> 
+  mutate(date_elec = glue("{year}-{month}-01")) |> 
   relocate(date_elec, .before = year) |> 
   select(-year, -month)
 
