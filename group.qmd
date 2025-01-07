@@ -42,7 +42,6 @@ In addition to what you see fit to execute, the following items are mandatory:
 
 ### Mandatory items:
 
-=======
 ## Objectives and mandatory items
 
 The objective of the delivery is to perform an analysis of the electoral data, carrying out the debugging, summaries and graphs you consider, both of their results and the accuracy of the electoral polls.
@@ -584,14 +583,67 @@ The election data includes:
 ### 3. Who benefits from low turnout?
 
 ```{r}
-
+#Calculate the Low Turnout Threshold
+low_turnout_threshold <- quantile(tidy_surveys$turnout, 0.25, na.rm = TRUE)
+#Filter Low Turnout Data
+low_turnout_data <- tidy_surveys%>%
+  drop_na() |> 
+  filter(turnout < low_turnout_threshold)
+#Summarize Votes by Party
+low_turnout_summary <- low_turnout_data %>%
+  group_by(party) %>%
+  summarise(total_votes = sum(votes)) %>%
+  mutate(vote_share = (total_votes / sum(total_votes)) * 100)
+#data visualization
+ggplot(low_turnout_summary, aes(x = reorder(party, -vote_share), y = vote_share, fill = party)) +
+  geom_bar(stat = "identity", color = "black", width = 0.7) +
+  labs(
+    title = "Party Vote Share under Low Turnout (<25%)",
+    x = "Party",
+    y = "Vote Share (%)"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_brewer(palette = "Paired")
 ```
+Based on the chart, **Partido Popular** and **Partido Socialista Obrero Español** are the parties that benefit the most under low turnout conditions. These two parties dominate the vote share, each capturing a significant proportion of the total votes in scenarios where voter turnout is below the 25th percentile.
+
+This suggests that these parties likely have:
+1. **A Loyal Voter Base**: Their supporters are more consistent and motivated to vote even under low turnout conditions.
+2. **Established Organizational Structures**: They might have stronger mechanisms to mobilize voters or a more stable electorate compared to smaller or less prominent parties.
 
 ### 4. How to analyze the relationship between census and vote? Is it true that certain parties win in rural areas?
 
 ```{r}
+#Less than 10,000 are rural constituencies and more than or equal to 10,000 are urban constituencies:
+tidy_election2 <- tidy_election |> 
+  mutate(rural = ifelse(population < 10000, 1, 0))  # 1 is rural, 0 is urban
 
+# Counting the total number of votes for urban and rural political parties
+party_votes <- tidy_election2 |> 
+  group_by(rural, party_main) |> 
+  summarise(total_votes = sum(party_ballots, na.rm = TRUE)) |> 
+  arrange(rural, desc(total_votes))
+party_votes
+
+# Visual analysis of urban and rural party performance
+ggplot(party_votes, aes(x = as.factor(rural), y = total_votes, fill = party_main)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Party Performance in Rural vs Urban Areas",
+       x = "Area Type (1 = Rural, 0 = Urban)",
+       y = "Total Votes",
+       fill = "Party Name") +
+  theme_minimal()
+
+# Regression analysis of the effect of urban/rural and population size on vote choice
+model <- lm(party_ballots ~ population + rural, data = tidy_election2)
+summary(model)
 ```
+ggplot2 graph presents the total votes received by each political party in rural (1) and urban (0) areas, clearly highlighting the dominance of major parties such as PARTIDO POPULAR and PARTIDO SOCIALISTA OBRERO ESPAÑOL in both settings. It reveals that urban areas generally have higher total votes across all parties, but the two dominant parties maintain strong performance in rural regions as well. Smaller parties, such as MÁS PAÍS, show a more noticeable presence in urban areas, indicating that urban voters may exhibit more diverse political preferences compared to rural voters who seem to concentrate their support on larger, established parties.
+
+Based on a linear regression model, evaluates how population size and rural classification influence vote counts. The results indicate that population size has a positive and significant relationship with vote totals, implying that larger populations tend to generate more votes. Additionally, the rural variable is also statistically significant, with rural areas contributing an average of 121 more votes than urban areas, suggesting that rural constituencies may slightly favor higher voter turnout or more concentrated political support. However, with an R-squared value of 0.3098, the model explains about 31% of the variation in vote totals, leaving room for other factors such as economic, social, or cultural differences to further explain voting behavior.
+
+In analyzing the relationship between census and vote, the results suggest that population size directly impacts vote totals, as larger areas generate more votes. The rural variable also indicates a modest but statistically significant effect, showing that rural areas may contribute slightly higher vote counts compared to urban areas. The data supports the hypothesis that certain parties, particularly larger and more established ones, perform well in both rural and urban areas, although urban regions exhibit greater political diversity due to the presence of smaller parties.
 
 ### 5. How to calibrate the error of the polls (remember that the polls are voting intentions at national level)?
 
