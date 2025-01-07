@@ -354,12 +354,9 @@ party_info <- final_surveys |>
 ```
 
 ### Cleaning the data -- election_data
-
-<<<<<<< HEAD
 The election_data file is large and requires quite extensive cleaning to make it "tidy". We will tidy the data to try make it most useful for future analysis. The election data starts off with 48,737 rows and 471 columns. Reducing the number of columns is a clear priority. 
-=======
+
 The election_data file is large and requires quite extensive cleaning to make it "tidy". We will tidy the data to try make it most useful for future analysis. The election data starts off with 48,737 rows and 471 columns. Reducing the number of columns is a clear priority.
->>>>>>> main
 
 First, we look at the quality of the data and see if any information is redundant and can be removed.
 
