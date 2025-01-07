@@ -17,7 +17,6 @@ format:
     embed-resources: true
 ---
 
-<<<<<<< HEAD
 ## Instructions (read before starting)
 =======
 
@@ -36,7 +35,6 @@ In addition to what you see fit to execute, the following items are mandatory:
 -   **Quarto slides should be uploaded to Github** (the link should be provided by a member of each group).
 
 -   The **maximum number of slides** should be 40. The **maximum time for each group** will be 20-22 minutes (+5 minutes for questions).
->>>>>>> main
 
 -   During the presentation you will **explain (summarised!) the analysis performed** so that **each team member speaks for a similar amount of time** and **each member can be asked about any of the steps**. The grade does not have to be the same for all members.
 
@@ -70,8 +68,6 @@ In addition to what you see fit to execute, the following items are mandatory:
 -   The **objective is to demonstrate that the maximum knowledge of the course has been acquired**: the more content of the syllabus is included, the better.
 
 ### Mandatory items:
-
->>>>>>> main
 1.  Data should be **converted to tidydata** where appropriate.
 
 2.  You should **include at least one join** between tables.
@@ -151,11 +147,8 @@ library(tidyr)
 library(stringr)
 library(lubridate)
 library(DataExplorer)
-<<<<<<< HEAD
-
-=======
 library(glue)
->>>>>>> main
+
 ```
 
 ## Data
@@ -238,7 +231,6 @@ tidy_surveys <- cleaned_surveys |>
     values_to = "votes"            # Corresponding voting intentions
   )
 
-<<<<<<< HEAD
 #Old version:
 # tidy_surveys <- tidy_surveys |>
 #   mutate(
@@ -306,7 +298,7 @@ final_surveys <- final_surveys |>
 
 # Preview
 tidy_surveys
-=======
+
 # add on party names by code
 tidy_surveys <- tidy_surveys %>%
   mutate(
@@ -361,7 +353,6 @@ Creating a table to link each party name to its unique code
 party_info <- final_surveys |> 
   select(party, party_code) |> 
   unique()
->>>>>>> main
 ```
 
 ### Cleaning the data -- election_data
@@ -377,17 +368,16 @@ First, we look at the quality of the data and see if any information is redundan
 ```{r check-electiondata-quality}
 plot_intro(election_data)
 
-<<<<<<< HEAD
 # we see 1.9% missing colums, identify the cols with no data - we have 9 cols. 
 blank_cols <- names(election_data)[sapply(election_data, function(x) all(is.na(x)))]
 
 # drop these columns and also filter to ensure no info outside 2008 to 2019 is included. 
-=======
+
 # We see 1.9% missing colums, identify the cols with no data - we have 9 cols. 
 blank_cols <- names(election_data)[sapply(election_data, function(x) all(is.na(x)))]
 
 # Drop these columns and also filter to ensure no info outside 2008 to 2019 is included. 
->>>>>>> main
+
 election_data <- election_data |> 
   select(-all_of(blank_cols)) |> 
   filter(anno >= 2008 & anno <= 2019)
@@ -397,7 +387,6 @@ election_data <- election_data %>%
   select(where(~ !is.logical(.)))
 ```
 
-<<<<<<< HEAD
 Second, we begin to make the election data tidy. We start by pivoting the data so all columns for party names are within one "party" variable. 
 
 ```{r pivot-election}
