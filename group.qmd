@@ -121,6 +121,11 @@ library(stringr)
 library(lubridate)
 library(DataExplorer)
 library(glue)
+library(ggplot2)
+library(forcats)
+library(ggrepel)
+library(scales)
+library(ggpubr)
 ```
 
 ## Data
@@ -505,9 +510,134 @@ The `turnout` data includes:
 
 ### 3. Who benefits from low turnout?
 
+Creating a palette according to the acronym and the color that matches their logo as far as possible.
+
 ```{r}
+color_mapping <- c(
+  "PSOE" = "#c81d11", 
+  "PP" = "#3399FF", 
+  "UP-IU" = "#6D50B3",
+  "OTHER" = "#808080", 
+  "ERC" = "#ebc049", 
+  "PNV" = "#C89289", 
+  "BILDU" = "#28c9bc", 
+  "CS" = "#FF5824", 
+  "CIU" = "#020559", 
+  "VOX" = "#73B446", 
+  "COMPROMIS" = "#FF5824", 
+  "BNG" = "#FFFFFF", 
+  "EH-BILDU" = "#02bda1", 
+  "PODEMOS-IU" = "#FF5733", 
+  "MP" = "#C0C0C0", 
+  "EAJ-PNV" = "#2a8343"
+)
 
 ```
+
+First of all, to understand what is a low turnout rate, we need to investigate how is the distribution of turnout rate from different municipalities in Spain:
+
+```{r,warning = FALSE}
+turnout_rate <- final_election |> 
+  mutate(turnout=total_votes/population) |> 
+  group_by(municipality) |> 
+  reframe(m_turnout=mean(turnout)) |> 
+  ungroup()
+
+q25 <- quantile(turnout_rate$m_turnout, probs = 0.25)
+q50 <- quantile(turnout_rate$m_turnout, probs = 0.5)
+q75 <- quantile(turnout_rate$m_turnout, probs = 0.75)
+
+ggplot(turnout_rate, aes(x = m_turnout)) +
+  geom_density(fill = "#ffc403", color = "#c70b1f", alpha = 0.5) +  
+
+
+  geom_vline(xintercept = q25, color = "#c70b1f", linetype = "dashed", linewidth = 1) +
+  geom_vline(xintercept = q50, color = "#c70b1f", linetype = "dashed", linewidth = 1) +
+  geom_vline(xintercept = q75, color = "#c70b1f", linetype = "dashed", linewidth = 1) +
+
+
+  geom_text(aes(x = q25, y = 6, label = paste0(percent(q25, accuracy = 0.1))), 
+            color = "#c70b1f", angle = 90, vjust = -0.5) +
+  geom_text(aes(x = q50, y = 6, label = paste0(percent(q50, accuracy = 0.1))), 
+            color = "#c70b1f", angle = 90, vjust = -0.5) +
+  geom_text(aes(x = q75, y = 6, label = paste0(percent(q75, accuracy = 0.1))), 
+            color = "#c70b1f", angle = 90, vjust = -0.5) +
+
+  scale_x_continuous(labels = label_percent(accuracy = 1)) +
+
+
+  theme_minimal() +
+  labs(
+    title = "Distribution of Voter Turnout Rate",
+    subtitle = "The dashed lines represent the 25th, 50th (median), and 75th percentiles.",
+    x = "Turnout Rate (%)",
+    y = NULL
+  ) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5, size = 14),
+    plot.subtitle = element_text(hjust = 0.5, size = 12, color = "grey40"),
+    axis.title = element_text(size = 10)
+  )
+
+```
+
+As it shows, the 25th percentiles is 71.5% of turnout rate, which should be understand as a relatively low turnout rate in Spain. 
+
+According to this criteria, we will investigate the performance of parties in these areas with relatively low turnout:
+```{r}
+low_turnout <- final_election |> 
+  mutate(turnout=total_votes/population) |> 
+  filter(turnout < 0.715) |> 
+  group_by(party_code) |> 
+  mutate(mean_ballot = mean(party_ballots)) |> 
+  ungroup() |> 
+  mutate(party_code = fct_reorder(party_code, mean_ballot, .desc = TRUE))
+
+
+ggplot(data=low_turnout, aes(x = reorder(party_code, party_ballots), y = mean_ballot, fill = factor(party_code)))+
+  geom_bar(stat = "identity")+
+  coord_flip()+
+  scale_fill_manual(values = color_mapping)+
+  scale_y_continuous(labels = scales::label_number(scale = 1e-6, suffix = "MM")) +
+  labs( x= NULL,
+        title= "Performance when low turnout rate occurs (<71.5%)",
+        subtitle= "We can observe that here the main parties, PP and PSOE, \nare still the biggest winner, and the right-wing-PP's vote surpasses left-wing-PSOE.\nHowever, here the far left party, PODEMOS, \nhas much better performance than the far right party, VOX.")+
+  theme_minimal()+
+  theme(legend.position = "none",
+        plot.title = element_text(size = 12, face = "bold", hjust = 0, margin = margin(b = 5)),
+    plot.subtitle = element_text(size = 9, hjust = 0, margin = margin(b = 10)))
+```
+
+
+Finally, we will glimpse at these municipalities with extremely low turnout rates (< 0.45) to see if the result would be very different:
+
+```{r}
+extreme_low_turnout <- final_election |> 
+  mutate(turnout=total_votes/population) |> 
+  filter(turnout < 0.45) |> 
+  group_by(party_code) |> 
+  mutate(mean_ballot = mean(party_ballots)) |> 
+  ungroup() |> 
+  mutate(party_code = fct_reorder(party_code, mean_ballot, .desc = TRUE))
+
+
+ggplot(data=extreme_low_turnout, aes(x = reorder(party_code, party_ballots), y = mean_ballot, fill = factor(party_code)))+
+  geom_bar(stat = "identity")+
+  coord_flip()+
+  scale_fill_manual(values = color_mapping)+
+  labs( x= NULL,
+        title= "Performance when extremely low turnout rate occurs (<45%)",
+        subtitle= "We can observe that here those Basque nacionalist parties (PNV and EH-BILDU)\nare the biggest winner in low turnout rate regions. \nAnd among those mainsteam parties, \nPSOE has much better performance than PP and PODEMOS \nin in low turnout rate regions.")+
+  theme_minimal()+
+  theme(legend.position = "none",
+        plot.title = element_text(size = 12, face = "bold", hjust = 0, margin = margin(b = 5)),
+    plot.subtitle = element_text(size = 9, color = "darkgrey", hjust = 0, margin = margin(b = 10)))
+
+  
+```
+
+
+
 
 ### 4. How to analyze the relationship between census and vote? Is it true that certain parties win in rural areas?
 
@@ -551,9 +681,102 @@ SOME IDEAS FOR THE ORIGINAL QUESTIONS TO START?
 
 ### 8. Yijia and Diego
 
+How has the turnout rate changed over time? And within each election year, how are turnout rates correlated with the municipalities' populations?
 ```{r}
+question8<- final_election |> 
+  group_by(date_elec,municipality) |> 
+  summarize(population=mean(population),
+            total_votes=mean(total_votes),
+            turnout_rate=(total_votes/population),
+            .groups = "drop") 
+```
+
+```{r,warning = FALSE}
+turnout_over_time <- question8 |> 
+  group_by(date_elec) |> 
+  summarize(avg_turnout = (sum(total_votes) / sum(population)),
+                           na.rm = TRUE, 
+                           .groups = "drop")
+ggplot(turnout_over_time, aes(x = date_elec, y = avg_turnout)) +
+  geom_line(color = "#ffc403", size = 2) +  
+  geom_point(color = "#c70b1f", size = 3) +  
+  geom_text_repel(aes(label = scales::percent(avg_turnout, accuracy = 0.01)),
+                  size = 3, 
+                  box.padding = 0.5,
+                  segment.color = NA,
+                  color="#c70b1f") +
+  labs(
+    title = "Change in Turnout Rate Over Time",
+    x = "Election Date",
+    y = "Average Turnout Rate"
+  ) +
+  scale_y_continuous(
+    limits = c(0.6, 0.8), 
+    labels = percent_format(scale = 100) 
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+    axis.title = element_text(size = 12)
+  )
+```
+
+We can observe that there is no clear tendency of turnout rate. However, it is interesting seeing that these two 'snap' elections in 2016 and 2019 were held shortly after the previous elections, with a very brief gap between each one and its predecessor. Both elections were triggered by the inability of any party to secure an absolute majority, leading to the call for a second 'emergency' election. However, the voter turnout in both of these elections was significantly lower compared to the previous ones, suggesting that the nature of such snap elections may reduce citizens' willingness to vote again.
+
+And apart from the election year and specific election context, how are turnout rates correlated with the municipalities' populations within each election year? 
+
+Since the population of municipalities ranges from very small to extremely large, with some major cities having populations hundreds of times greater than small villages, we will apply a logarithmic transformation to the population for a more effective regression analysis.
+
+```{r,warning = FALSE}
+cor_value_overall <- cor(question8$population, question8$turnout_rate)
+lm_model_overall <- lm(turnout_rate ~ log(population), data = question8)
+slope_overall <- coef(lm_model_overall)[2]
+p_value_overall <- summary(lm_model_overall)$coefficients[2, 4]
+
+calculate_slope_and_cor <- function(data) {
+  data <- data %>%
+    mutate(log_population = log(population))
+  cor_value <- cor(data$log_population, data$turnout_rate, use = "complete.obs")
+  lm_model <- lm(turnout_rate ~ log_population, data = data)
+  slope <- coef(lm_model)[2]
+  return(data.frame(cor_value = cor_value, slope = slope))
+}
+
+slope_cor_values <- question8 %>%
+  group_by(date_elec) %>%
+  do(calculate_slope_and_cor(.)) %>%
+  ungroup()
+
+
+ggplot(question8, aes(x = log(population), y = turnout_rate)) +
+  geom_point(color = "#ffc403") +  
+  geom_smooth(method = "lm", color = "#c70b1f", linetype = "dashed") +  
+  facet_wrap(~ date_elec) +
+  geom_text(data = slope_cor_values, 
+            aes(x = max(log(question8$population)), y = max(question8$turnout_rate), 
+                label = paste("r = ", round(cor_value, 2), "\nSlope = ", round(slope, 4))), 
+            color = "#c70b1f", size = 2, hjust = 1, vjust = 1) +
+  theme_minimal() +
+  labs(title = "Correlation between log of Population\nand Turnout rate over time",
+       subtitle= paste("Combining election results from multiple years, \nthe overall correlation is ", round(cor_value_overall, 2),"\nthe overall slope is ", round(slope_overall, 4), "with a p-value ", p_value_overall, "."))+
+   theme(
+    plot.title = element_text(face = "bold", hjust = 0, size = 11),
+    plot.subtitle = element_text(hjust = 0, size = 9, color = "grey40"),
+    axis.title = element_text(size = 10),
+    aspect.ratio = 1.2
+  )
 
 ```
+
+We can observe that the correlation is always negative during this period, the slope is around -0.01 for log(population), and its overall p-value is very close to 0, that is, statistically very significant over time.
+
+The slope -0.01 can be interpreted in this way: If the population doubles, the turnout rate in this municipality will decrease by approximately 0.69%.
+
+**In conclusion, although there is no clear tendency of turnout rate evolution over time, we do observe two important insights:**
+
+1. The nature of "snap" elections like in 2016 and 2019, as a result of the inability of any party to secure an absolute majority, may reduce citizens' willingness to vote again.
+2. The population size has a negative effect on turnout rate: if the population doubles, the turnout rate in this municipality will decrease by approximately 0.69%.
+
 
 ### 7. Marco, Isabel, Brad
 
