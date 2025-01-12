@@ -122,6 +122,10 @@ library(lubridate)
 library(DataExplorer)
 library(glue)
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+library(scales)
+>>>>>>> Stashed changes
 =======
 library(scales)
 >>>>>>> Stashed changes
@@ -297,6 +301,7 @@ Second, we begin to make the election data tidy. We start by pivoting the data s
 ```{r pivot-election}
 # Pivot all the party names and ballot counts to the main table
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 election_pivot <- election_data |> 
   pivot_longer(
     cols = `BERDEAK-LOS VERDES`:`COALICIÓN POR MELILLA`, # select all party data
@@ -382,11 +387,57 @@ party_names <- party_names |>
 
 unique(party_names$party_main)
 
+=======
+election_data <- election_data %>%
+  mutate(across(`BERDEAK-LOS VERDES`:`COALICIÓN POR MELILLA`, as.numeric))
+
+election_pivot <- election_data |> 
+  pivot_longer(
+    cols = `BERDEAK-LOS VERDES`:`COALICIÓN POR MELILLA`, # select all party data
+    names_to = "party",
+    values_to = "ballots"
+  )
+str(election_pivot)
+head(election_pivot)
+```
+
+We now have a table with 20,177,118 rows and 17 columns.
+
+This is more clean than previously, but we still need to aggregate of our party variables into the main party groups. We will do this by creating a mapping table (party_names) that standardizes the raw party names into main party groupings (party_main) using regular expressions.
+
+```{r assigning-partygroup}
+party_names <- tibble(names = unique(election_pivot$party))
+
+# Party names in the election_data file do not match up perfectly with the abbrev file (i.e. some of the names present in party_names are not in abbrev)
+# So it is better to work directly on party_names instead of using abbrev
+
+party_names <- party_names |> 
+    mutate(party_main = case_when(
+                str_detect(names, "(?i)PSOE|PARTIDO DOS SOCIALISTAS DE GALICIA|PARTIDO SOCIALISTA DE EUSKADI|PARTIDO SOCIALISTA OBRERO ESPAÑOL|PARTIT SOCIALISTA OBRER ESPANYOL") ~ "PARTIDO SOCIALISTA OBRERO ESPAÑOL",
+                str_detect(names, "(?i)PARTIDO POPULAR") ~ "PARTIDO POPULAR",
+                str_detect(names, "(?i)CIUDADANOS-PARTIDO DE LA CIUDADANIA|CIUDADANOS-PARTIDO DE LA CIUDADANÍA|CIUDADANOS PARTIDO DE LA CIUDADANIA|CIUDADANOS PARTIDO DE LA CIUDADANÍA|CIUDADANOS, PARTIDO DE LA CIUDADANÍA|CIUTADANS") ~ "CIUDADANOS",
+                str_detect(names, "(?i)EUZKO ALDERDI JELTZALEA-PARTIDO NACIONALISTA VASCO") ~ "PARTIDO NACIONALISTA VASCO",
+                str_detect(names, "(?i)BLOQUE NACIONALISTA GALEGO|BNG") ~ "BLOQUE NACIONALISTA GALLEGO",
+                str_detect(names, "(?i)CONVERGENCIA I UNIO|CONVERGÈNCIA I UNIÓ") ~ "CONVERGÈNCIA I UNIÓ",
+                str_detect(names, "(?i)PODEM|EZKER BATUA|EZKER ANITZA|IZQUIERDA UNIDA|ESQUERRA UNIDA|ESQUERDA UNIDA") ~ "UNIDAS PODEMOS - IU",
+                str_detect(names, "(?i)ESQUERRA REPUBLICANA") ~ "ESQUERRA REPUBLICANA DE CATALUNYA",
+                str_detect(names, "(?i)BILDU|EUSKO ALKARTASUNA|ARALAR|SORTU|ALTERNATIBA") ~ "EH - BILDU",
+                str_detect(names, "(?i)MÁS PAÍS") ~ "MÁS PAÍS",
+                str_detect(names, "(?i)VOX") ~ "VOX",
+                TRUE ~ "OTHER")
+    )
+
+unique(party_names$party_main)
+
+>>>>>>> Stashed changes
 # Adding party code to party_names dataframe
 party_names <- party_names |> 
   left_join(party_info, by = join_by(party_main == party))
 ```
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 Now join on the main party names and codes to our election table. Testing was undertaken and the join of a table was more efficient than alternatives (e.g. str_detects over election_pivot or rowwise summaries).
 
@@ -553,8 +604,11 @@ The `turnout` data includes:
 ### 2. Which party was the second when the first was the PSOE? And when the first was the PP?
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 ```{r}
 =======
+=======
+>>>>>>> Stashed changes
 #### Identify the First and Second Parties
 ```{r}
 ranked_parties <- final_election |> 
@@ -827,6 +881,9 @@ for (date in unique_dates_pp) {
 for (date in unique_dates_pp) {
   print(plots_pp[[as.character(as.Date(date))]])
 }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 ```
