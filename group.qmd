@@ -588,7 +588,7 @@ The election data includes:
 
 ```{r}
 #Calculate the Low Turnout Threshold
-turnout2 <- final_election |> 
+turnout2 <- tidy_election |> 
   mutate(actual_turnout= (total_votes / population) * 100)
 
 low_turnout_threshold <- quantile(turnout2$actual_turnout, 0.25, na.rm = TRUE)
@@ -631,7 +631,7 @@ tidy_election2 <- tidy_election |>
 # Counting the total number of votes for urban and rural political parties
 party_votes <- tidy_election2 |> 
   group_by(rural, party_main) |> 
-  summarise(total_votes = sum(party_ballots, na.rm = TRUE)) |> 
+  summarise(total_votes = sum(party_ballots, na.rm = TRUE), .groups = "drop") |> 
   arrange(rural, desc(total_votes))
 party_votes
 
@@ -956,8 +956,45 @@ This suggests that these parties likely have:
 ### 4. How to analyze the relationship between census and vote? Is it true that certain parties win in rural areas?
 
 ```{r}
+#Less than 10,000 are rural constituencies and more than or equal to 10,000 are urban constituencies:
+final_election2 <- final_election |> 
+  mutate(rural = ifelse(population < 10000, 1, 0))  # 1 is rural, 0 is urban
 
+#Relationship between census and vote(Regression analysis)
+model <- lm(party_ballots ~ population, data = final_election2)#Examining the relationship between population size and votes
+summary(model)
+
+#Counting the total number of votes for each political party in urban and rural areas
+party_votes <- final_election2 |> 
+  group_by(rural, party_code) |> 
+  summarise(total_votes = sum(party_ballots, na.rm = TRUE), .groups = "drop") |> 
+  arrange(rural, desc(total_votes))
+party_votes
+
+#Visualizing the performance of urban and rural political parties:
+ggplot(party_votes, aes(x = as.factor(rural), y = total_votes, fill = party_code)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Party Performance in Rural vs Urban Areas",
+       x = "Area Type (1 = Rural, 0 = Urban)",
+       y = "Total Votes",
+       fill = "Party Name") +
+  theme_minimal() 
+
+#Two-way ANOVA to examine urban-rural and partisan interactions
+final_election2$rural <- as.factor(final_election2$rural)
+final_election2$party_main <- as.factor(final_election2$party_main)
+anova_model <- aov(party_ballots ~ rural * party_main, data = final_election2)
+summary(anova_model)
+
+#Ex post facto tests: further analysis of partisan differences
+TukeyHSD(anova_model, "party_main")
 ```
+The results of the regression analysis show that there is a significant positive correlation (p < 0.001) between population size and party_ballots, i.e., the larger the population size, the greater the number of ballots. The model explains about 29.49% of the variation in ballots (R² = 0.2949), indicating that population size is an important influence on the distribution of ballots, but there are other factors that are not included in the model.
+
+The ggplot graph shows the distribution of total votes for each political party in rural (1) and urban (0) areas. The data show that PARTIDO POPULAR and PARTIDO SOCIALISTA OBRERO ESPAÑOL are dominant in both rural and urban areas, but that urban voters show greater political diversity, while rural voters are more concentrated in their support for the main political parties, with a more pronounced tendency to support specific parties.
+
+The results of the Two-way ANOVA indicate that both urban-rural categorization and party type significantly affect the distribution of votes, while there is an interaction effect suggesting that some specific parties perform more prominently in rural or urban areas.
+TukeyHSD post hoc test results show that there is a significant difference (p < 0.05) in the number of votes across parties, with PARTIDO POPULAR and PARTIDO SOCIALISTA OBRERO ESPAÑOL in particular being significantly ahead of the other parties in most comparisons, suggesting that they have a stronger vote advantage in both urban and rural areas. In addition, interaction effects further support the idea that certain parties perform more prominently in specific regions.
 
 ### 5. How to calibrate the error of the polls (remember that the polls are voting intentions at national level)?
 
@@ -1002,14 +1039,16 @@ process_election_data <- function(final_election, final_surveys) {
     group_by(party_code, party_main) %>%
     summarise(
       valid_votes = sum(valid_votes, na.rm = TRUE),
-      party_ballots = sum(party_ballots, na.rm = TRUE)
+      party_ballots = sum(party_ballots, na.rm = TRUE),
+       .groups = "drop"
     ) %>%
     mutate(actual_vote_share = (party_ballots / valid_votes) * 100)
 
   # Aggregate survey data by party and calculate average predicted vote percentage
   survey_aggregated <- final_surveys %>%
     group_by(party_code, party) %>%
-    summarise(predicted_vote_share = mean(votes, na.rm = TRUE))
+    summarise(predicted_vote_share = mean(votes, na.rm = TRUE),
+               .groups = "drop")
 
   # Merge aggregated election and survey data on party codes
   merged_data <- merge(election_aggregated, survey_aggregated, by = "party_code")
@@ -1038,6 +1077,19 @@ merged_data %>%
   ) +
   theme_minimal()
 ```
+
+The survey projections of vote shares did not perfectly correspond to the actual election results, as evidenced by the Prediction Bias by Party chart. Prediction bias is the deviation between the survey-predicted vote shares and the actual vote shares observed in the election.
+
+From the visualization:
+Positive Bias (overestimation):
+The CS party experienced a significant positive bias, meaning that its vote share was overestimated in the surveys compared to the actual election results.
+
+Negative Bias (underestimation):
+Several parties, such as PSOE, PP, and PODEMOS-IU, show a negative bias, indicating that their actual vote shares were underestimated in the surveys.
+The negative bias for PODEMOS-IU appears particularly pronounced, suggesting a substantial underestimation of their support.
+
+Smaller Bias:
+Certain smaller parties (e.g., ERC, EH-BILDU, and MP) display relatively minor deviations, suggesting better alignment between survey predictions and actual results.
 
 ### 8. Yijia and Diego
 
