@@ -581,9 +581,10 @@ ggplot(turnout_rate, aes(x = m_turnout)) +
 
 ```
 
-As it shows, the 25th percentiles is 71.5% of turnout rate, which should be understand as a relatively low turnout rate in Spain. 
+As it shows, the 25th percentiles is 71.5% of turnout rate, which should be understand as a relatively low turnout rate in Spain.
 
 According to this criteria, we will investigate the performance of parties in these areas with relatively low turnout:
+
 ```{r}
 low_turnout <- final_election |> 
   mutate(turnout=total_votes/population) |> 
@@ -608,8 +609,7 @@ ggplot(data=low_turnout, aes(x = reorder(party_code, party_ballots), y = mean_ba
     plot.subtitle = element_text(size = 9, hjust = 0, margin = margin(b = 10)))
 ```
 
-
-Finally, we will glimpse at these municipalities with extremely low turnout rates (< 0.45) to see if the result would be very different:
+Finally, we will glimpse at these municipalities with extremely low turnout rates (\< 0.45) to see if the result would be very different:
 
 ```{r}
 extreme_low_turnout <- final_election |> 
@@ -636,8 +636,15 @@ ggplot(data=extreme_low_turnout, aes(x = reorder(party_code, party_ballots), y =
   
 ```
 
+When we check why the Basque nationalist parties score highest when turnout is low, it is because Pais Vasco (code_community = 14) is the community with the lowest turnout. However, most of the data in this table is from 2008, where there was an election boycott in the community. 624 of the 948 instances of municipalities voting \<45% were in the 2008 election in Pais Vasco.
 
-
+```{r}
+extreme_low_turnout |> 
+  group_by(code_community, date_elec) |> 
+  summarise(extreme_low_votes = length(code_community)) |> 
+  pivot_wider(names_from = date_elec,
+              values_from = extreme_low_votes)
+```
 
 ### 4. How to analyze the relationship between census and vote? Is it true that certain parties win in rural areas?
 
@@ -682,6 +689,7 @@ SOME IDEAS FOR THE ORIGINAL QUESTIONS TO START?
 ### 8. Yijia and Diego
 
 How has the turnout rate changed over time? And within each election year, how are turnout rates correlated with the municipalities' populations?
+
 ```{r}
 question8<- final_election |> 
   group_by(date_elec,municipality) |> 
@@ -697,6 +705,7 @@ turnout_over_time <- question8 |>
   summarize(avg_turnout = (sum(total_votes) / sum(population)),
                            na.rm = TRUE, 
                            .groups = "drop")
+
 ggplot(turnout_over_time, aes(x = date_elec, y = avg_turnout)) +
   geom_line(color = "#ffc403", size = 2) +  
   geom_point(color = "#c70b1f", size = 3) +  
@@ -723,7 +732,7 @@ ggplot(turnout_over_time, aes(x = date_elec, y = avg_turnout)) +
 
 We can observe that there is no clear tendency of turnout rate. However, it is interesting seeing that these two 'snap' elections in 2016 and 2019 were held shortly after the previous elections, with a very brief gap between each one and its predecessor. Both elections were triggered by the inability of any party to secure an absolute majority, leading to the call for a second 'emergency' election. However, the voter turnout in both of these elections was significantly lower compared to the previous ones, suggesting that the nature of such snap elections may reduce citizens' willingness to vote again.
 
-And apart from the election year and specific election context, how are turnout rates correlated with the municipalities' populations within each election year? 
+And apart from the election year and specific election context, how are turnout rates correlated with the municipalities' populations within each election year?
 
 Since the population of municipalities ranges from very small to extremely large, with some major cities having populations hundreds of times greater than small villages, we will apply a logarithmic transformation to the population for a more effective regression analysis.
 
@@ -774,9 +783,8 @@ The slope -0.01 can be interpreted in this way: If the population doubles, the t
 
 **In conclusion, although there is no clear tendency of turnout rate evolution over time, we do observe two important insights:**
 
-1. The nature of "snap" elections like in 2016 and 2019, as a result of the inability of any party to secure an absolute majority, may reduce citizens' willingness to vote again.
-2. The population size has a negative effect on turnout rate: if the population doubles, the turnout rate in this municipality will decrease by approximately 0.69%.
-
+1.  The nature of "snap" elections like in 2016 and 2019, as a result of the inability of any party to secure an absolute majority, may reduce citizens' willingness to vote again.
+2.  The population size has a negative effect on turnout rate: if the population doubles, the turnout rate in this municipality will decrease by approximately 0.69%.
 
 ### 7. Marco, Isabel, Brad
 
