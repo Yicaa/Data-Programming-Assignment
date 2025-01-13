@@ -585,7 +585,8 @@ final_election_summary_v3 <- final_election_summary_v2 |>
 wmae <- final_election_summary_v3 |> 
   group_by(pollster) |> 
   summarise(WMAE = sum(weight * error) / sum(weight)) |> 
-  ungroup()
+  ungroup() |> 
+  mutate(pollster = fct_reorder(pollster, WMAE, .desc = FALSE))
 ```
 
 We can obtain the 5 pollsters that predict the best and the 5 that predict the worst.
@@ -601,7 +602,7 @@ tail(wmae$pollster[order(wmae$WMAE)], 5)
 Here we will visualize the performance of these pollsters:
 
 ```{r WMAE,warning = FALSE}
-ggplot(wmae, aes(x = reorder(pollster, WMAE), y = WMAE, fill = WMAE)) +
+ggplot(wmae, aes(x = pollster, y = WMAE, fill = WMAE)) +
   geom_col() +  
   theme_minimal(base_size = 10) +
   theme(
