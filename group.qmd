@@ -945,6 +945,60 @@ for (date in unique_dates_pp) {
 
 ```
 
+#### For the presentation 
+```{r}
+pp_first <- pp_first |> 
+  mutate(
+    population_category = factor(
+      case_when(
+        population < 10000 ~ "<10.000",
+        population >= 10000 & population < 50000 ~ ">= 10.000 & < 50.000",
+        population >= 50000 & population < 100000 ~ ">= 50.000 & < 100.000",
+        population >= 100000 & population < 500000 ~ ">= 100.000 & < 500.000",
+        population >= 500000 & population < 1000000 ~ ">= 500.000 & < 1.000.000",
+        population >= 1000000 ~ ">= 1.000.000"
+      ),
+      levels = c("<10.000", ">= 10.000 & < 50.000", ">= 50.000 & < 100.000", 
+                 ">= 100.000 & < 500.000", ">= 500.000 & < 1.000.000", ">= 1.000.000")
+    )
+  )
+
+data_filtered_2019 <- pp_first |> 
+  filter(date_elec == as.Date("2019-04-28")) |> 
+  group_by(population_category, second_party) |> 
+  summarise(
+    total_votes = sum(second_votes, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+plot_2019 <- ggplot(data_filtered_2019, aes(x = population_category, 
+                                            y = total_votes, 
+                                            fill = second_party)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  scale_fill_manual(values = c(
+    "PSOE" = "#f20400", 
+    "PODEMOS-IU" = "#663278", 
+    "VOX" = "#5AB531", 
+    "CS" = "#EB6109"
+  )) +
+  scale_y_continuous(labels = scales::comma) + 
+  labs(
+    title = "Second Party by Population for Election on 2019-04-28",
+    x = "Inhabitants per city",
+    y = "Total Votes"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+    axis.text.x = element_text(size = 10, angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 10),
+    legend.position = "bottom",
+    legend.title = element_blank()  # Remove legend title
+  )
+
+print(plot_2019)
+
+```
 ### 3. Who benefits from low turnout?
 
 ```{r}
