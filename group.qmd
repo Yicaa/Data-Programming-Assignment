@@ -565,7 +565,7 @@ library(forcats)
 ggplot(party_winners, aes(x = party_grouped, y = num_municipalities, fill = party_grouped)) +
   geom_bar(stat = "identity") +
   facet_wrap(~ date_elec, scales = "free_y", ncol = 3) +
-  scale_fill_manual(values = party_colors, name = "Winning Party (Code)") +
+  scale_fill_manual(values = party_colors) +
   labs(
     title = "Winning Parties in Municipalities with >100k Population",
     x = NULL,
@@ -578,9 +578,7 @@ ggplot(party_winners, aes(x = party_grouped, y = num_municipalities, fill = part
     axis.line.y = element_blank(),       
     axis.line.x = element_blank(),       
     panel.grid.major.x = element_blank(),
-    legend.position = "right", 
-    legend.title = element_text(size = 12), 
-    legend.text = element_text(size = 10), 
+    legend.position = "none",  
     strip.text = element_text(size = 12, face = "bold")
   )
 ```
