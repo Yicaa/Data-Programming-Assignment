@@ -1285,7 +1285,42 @@ tail(wmae$pollster[order(wmae$WMAE)], 5)
 -------------------
 
 ### Q6 : Polling house accuracy
-text here
+Which polling houses got it right the most and which ones deviated the most from the results?
+<br>
+<br>
+<br>
+Measurement criteria: weighted mean absolute error (WMAE) Weighting: 0.7 to the top five parties receiving the most votes in each general election, and a weight of 0.3 to the remaining parties.
+<br>
+```{r}
+#| echo: true
+final_election_summary_v2 <- final_election_summary |> 
+  group_by(date_elec) |>  
+  arrange(date_elec, desc(national_share)) |>  
+  mutate(rank_pos = dense_rank(-national_share)) |>  
+  mutate(weight = if_else(rank_pos <= 5, 0.7, 0.3)) |>  
+  ungroup()
+
+final_election_summary_v3 <- final_election_summary_v2 |> 
+  mutate(national_share=national_share*100) |> 
+  mutate(error = abs(votes - national_share)) 
+  
+wmae <- final_election_summary_v3 |> 
+  group_by(pollster) |> 
+  summarise(WMAE = sum(weight * error) / sum(weight)) |> 
+  ungroup() |> 
+  mutate(pollster = fct_reorder(pollster, WMAE, .desc = FALSE))
+```
+<br>
+```{r}
+#| echo: true
+#| layout-ncol: 2
+head(wmae$pollster[order(wmae$WMAE)], 5)
+tail(wmae$pollster[order(wmae$WMAE)], 5)
+```
+
+-------------------
+
+### Q6 : Visualization
 
 ```{r WMAE,warning = FALSE}
 ggplot(wmae, aes(x = pollster, y = WMAE, fill = WMAE)) +
@@ -1306,11 +1341,10 @@ ggplot(wmae, aes(x = pollster, y = WMAE, fill = WMAE)) +
     y = "Weighted Average Error"
   ) +
   scale_y_continuous(labels = scales::comma) +
-  scale_fill_gradient2(low = "green", mid = "#ffc403", high = "#c70b1f", midpoint = 3.2) 
+  scale_fill_gradient2(low = "green", mid = "#ffc403", high = "#c70b1f", midpoint = 1.8) 
 
 ```
 
----
 
 # Exploratory questions
 
