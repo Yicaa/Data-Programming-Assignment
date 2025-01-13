@@ -219,6 +219,7 @@ tidy_surveys <- tidy_surveys %>%
       party_raw == "EAJ-PNV" ~ "PARTIDO NACIONALISTA VASCO",
       party_raw == "ERC" ~ "ESQUERRA REPUBLICANA DE CATALUNYA",
       party_raw == "IU" ~ "UNIDAS PODEMOS - IU",
+      party_raw == "UP" ~ "UNIDAS PODEMOS - IU",
       party_raw == "PP" ~ "PARTIDO POPULAR",
       party_raw == "BNG" ~ "BLOQUE NACIONALISTA GALLEGO",
       party_raw == "CS" ~ "CIUDADANOS",
@@ -1150,9 +1151,9 @@ ggplot(polling_err, aes(x = reorder(party_code, avg_err), y = avg_err, fill = fa
     x = "Party",
     # y = "Average Polling Error")
     y = paste("\u2190 Underestimated", strrep(" ", 35), "Overestimated \u2192")) +
-  scale_y_continuous(limits = c(-7,5), 
+  scale_y_continuous(limits = c(-5,3), 
                      expand = expansion(add = c(0,0)),
-                     breaks = c(-6, -4, -2, 0, 2, 4)) +
+                     breaks = c(-4, -2, 0, 2)) +
   theme_minimal() +
   theme(
     legend.position = NULL,
@@ -1163,8 +1164,6 @@ ggplot(polling_err, aes(x = reorder(party_code, avg_err), y = avg_err, fill = fa
     axis.title.y = element_text(size = 8)) +
   guides(fill = guide_legend(title = "Political Party"))
 ```
-
-Bigger party might be subject to bigger errors because they are voted by more people (ex. PNV cannot be over/underestimated by several percentage points as it only receives 1% of votes)
 
 ### 6. Which polling houses got it right the most and which ones deviated the most from the results?
 
