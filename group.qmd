@@ -493,14 +493,328 @@ The `turnout` data includes:
 
 ### 1.Which party was the winner in the municipalities with more than 100,000 habitants (census) in each of the elections?
 
-```{r}
+We create a table `(winning_table)` here that has a column listing each municipality that reported over 100k habitants for at least one election. Then there are columns for each of the elections that report on who won the election and the % of total vote the winning party received. 
 
+First, explore the data and see that 48 of the 8,135 municipalities had over 100k people. We use code_municipality as some municipalities have the same name. 
+
+```{r}
+# count of provinces to include (for checking)
+final_election |> 
+  filter(population >100000) |> 
+  summarise(num_100k = length(unique(code_municipality))) # we have 48 municipalities 
+
+# create table to identify winning party only in provinces >100k
+winners100k <- final_election |> 
+  filter(population > 100000) |> 
+  group_by(date_elec, code_municipality, municipality) |> 
+  mutate(vote_percent = as.character(glue("{party_main} ({round(party_ballots/valid_votes*100, 1)}%)"))) |> # create name + vote% value. 
+  slice_max(order_by = party_ballots, n = 1) |> #select winner only
+  ungroup() |> 
+  select(date_elec, code_municipality, municipality, population, party_main, party_code, valid_votes, party_ballots, vote_percent)
+
+
+# Pivot to create summary table of only the municipality, winner and vote getting %
+winning_table <- winners100k |> 
+  select(municipality, date_elec, vote_percent) |> 
+  pivot_wider(names_from = date_elec, 
+              values_from = vote_percent)
+
+# print output
+winning_table
+```
+
+Some of our winning table, have NA values, we confirm that this is because there code was <100k in some elections and over 100k in others:
+
+```{r}
+# Check why some have NA's - pull municipality names
+varying_pop_municips <- winning_table |>
+  filter_all(any_vars(is.na(.))) |>
+  pull(municipality)
+
+# filter for those municipalities to show the population varies +/- 100k
+final_election |> 
+  filter(municipality %in% varying_pop_municips) |> 
+  group_by(municipality, date_elec, population) |> 
+  summarise() |> 
+  pivot_wider(names_from = date_elec, 
+              values_from = population)
 ```
 
 ### 2. Which party was the second when the first was the PSOE? And when the first was the PP?
 
-```{r}
+#### Identify the First and Second Parties
 
+```{r}
+ranked_parties <- final_election |> 
+  group_by(date_elec, code_municipality) |> 
+  arrange(desc(party_ballots)) |> 
+  mutate(rank = row_number()) |> 
+  filter(rank <= 2) |>  
+  ungroup()
+```
+
+#### Filter when PSOE is first
+```{r}
+psoe_first <- ranked_parties |> 
+  filter(rank == 1 & party_code == "PSOE") |> 
+  left_join(ranked_parties |> filter(rank == 2), by = c("date_elec", "code_municipality")) |> 
+  rename(
+    first_party = party_code.x,  
+    first_votes = party_ballots.x,  
+    second_party = party_code.y,  
+    second_votes = party_ballots.y,
+    population = population.y
+  ) |> 
+  select(date_elec, code_municipality, population, first_party, first_votes, second_party, second_votes)
+```
+
+#### Filter when PP is first
+```{r}
+pp_first <- ranked_parties %>%
+  filter(rank == 1 & party_code == "PP") %>%  
+  left_join(ranked_parties %>% filter(rank == 2), by = c("date_elec", "code_municipality")) |> 
+  rename(
+    first_party = party_code.x,  
+    first_votes = party_ballots.x,  
+    second_party = party_code.y,  
+    second_votes = party_ballots.y,
+    population = population.y
+  ) |> 
+  select(date_elec, code_municipality, population, first_party, first_votes, second_party, second_votes)
+```
+
+#### Summarized PSOE first 
+```{r}
+psoe_summary <- psoe_first %>%
+  group_by(date_elec, second_party) %>%
+  summarise(
+    total_votes = sum(second_votes),  
+    count_as_second = n(),           
+    .groups = "drop"
+  ) %>%
+  arrange(desc(date_elec)) 
+print(psoe_summary)
+
+psoe_summary_per_year <- psoe_first %>%
+  group_by(date_elec) %>%                                
+  filter(second_votes == max(second_votes)) %>%          
+  select(date_elec, second_party) %>%      
+  arrange(date_elec)  |> 
+  print()
+  
+```
+PP was the second party when PSOE was the winner in all the elections.
+
+#### Summarized PP first 
+```{r}
+pp_summary <- pp_first %>%
+  group_by(date_elec, second_party) %>%
+  summarise(
+    total_votes = sum(second_votes),  
+    count_as_second = n(),           
+    .groups = "drop"
+  ) %>%
+  arrange(desc(date_elec)) 
+print(pp_summary)
+
+pp_summary_per_year <- pp_first %>%
+  group_by(date_elec) %>%                                
+  filter(second_votes == max(second_votes)) %>%          
+  select(date_elec, second_party) %>%      
+  arrange(date_elec)  |> 
+  print()
+  
+```
+PSOE was the second party when PP was the winner in almost every election. PODEMOS-IU was the second party in the elections of 2015 and 2016 after PP.
+
+#### Vis PSOE first 
+```{r}
+ggplot(psoe_first, aes(y = reorder(date_elec, desc(date_elec)), 
+                     x = second_votes, fill = second_party)) +
+  
+  geom_bar(stat = "identity", position = "identity", width = 0.7) +
+  scale_fill_manual(values = c("PP" = "#0157a1", "PODEMOS-IU" = "#663278", "VOX" = "#5AB531", "CS" = "#EB6109")) +
+  scale_x_continuous(labels = scales::comma) + 
+  theme_minimal() +
+  labs(x="", y="", title= "Second party when the winner is PSOE", subtitle = "total n of votes per election") +
+   theme(
+    plot.title = element_text(face = "bold", size = 14, hjust = 0),
+    plot.subtitle = element_text(face = "italic", size = 12, hjust = 0),
+    legend.position = "bottom",
+    legend.title=element_blank(),
+    axis.text.y = element_text(size = 10),
+    axis.text.x = element_text(size = 10),
+    axis.title = element_blank(),
+    panel.grid.major.y = element_line(color = "gray", linetype = "dashed", size = 0.3)
+  ) 
+```
+#### Second most voted party by population when the first id PSOE
+```{r}
+# Step 1: Create population categories with ordered factors
+psoe_first <- psoe_first %>%
+  mutate(
+    population_category = factor(
+      case_when(
+        population < 10000 ~ "Pueblo Pequeño",
+        population >= 10000 & population < 50000 ~ "Pueblo Mediano",
+        population >= 50000 & population < 100000 ~ "Pueblo Grande",
+        population >= 100000 & population < 500000 ~ "Ciudad Pequeña",
+        population >= 500000 & population < 1000000 ~ "Gran Ciudad",
+        population >= 1000000 ~ "Metrópolis"
+      ),
+      levels = c("Pueblo Pequeño", "Pueblo Mediano", "Pueblo Grande", 
+                 "Ciudad Pequeña", "Gran Ciudad", "Metrópolis")
+    )
+  )
+
+# Step 2: Loop through elections and create a plot for each election
+unique_dates <- unique(psoe_first$date_elec)
+plots <- list()
+
+for (date in  unique_dates) {
+  # Ensure `date` is treated as a valid Date object
+  current_date <- as.Date(date)
+  
+  # Filter data for the specific election date
+  data_filtered <- psoe_first %>%
+    filter(date_elec == current_date) %>%
+    group_by(population_category, second_party) %>%
+    summarise(
+      total_votes = sum(second_votes, na.rm = TRUE),
+      .groups = "drop"
+    )
+  
+  # Create the plot
+  plot <- ggplot(data_filtered, aes(x = population_category, 
+                                    y = total_votes, 
+                                    fill = second_party)) +
+    geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+    scale_fill_manual(values = c(
+      "PP" = "#0157a1", 
+      "PODEMOS-IU" = "#663278", 
+      "VOX" = "#5AB531", 
+      "CS" = "#EB6109"
+    )) +
+    scale_y_continuous(labels = scales::comma) + 
+    labs(
+      title = paste("Second Party by Population for Election on", format(current_date, "%Y-%m-%d")),  # Format the date properly
+      x = "Population Category",
+      y = "Total Votes"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+      axis.text.x = element_text(size = 10, angle = 45, hjust = 1),
+      axis.text.y = element_text(size = 10),
+      legend.position = "bottom",
+      legend.title = element_blank()  # Remove legend title
+    )
+  
+  # Save the plot to the list
+  plots[[as.character(current_date)]] <- plot
+}
+
+# Step 3: Display all plots (one at a time)
+for (date in unique_dates) {
+  print(plots[[as.character(as.Date(date))]])
+}
+
+```
+
+#### Vis PP first 
+```{r}
+ggplot(pp_first, aes(y = reorder(date_elec, desc(date_elec)), 
+                     x = second_votes, fill = second_party)) +
+  
+  geom_bar(stat = "identity", position = "identity", width = 0.7) +
+  scale_fill_manual(values = c("PSOE" = "#f20400", "PODEMOS-IU" = "#663278", "VOX" = "#5AB531", "CS" = "#EB6109")) +
+  scale_x_continuous(labels = scales::comma) + 
+  theme_minimal() +
+  labs(x="", y="", title= "Second party when the winner is PP", subtitle = "total n of votes per election") +
+   theme(
+    plot.title = element_text(face = "bold", size = 14, hjust = 0),
+    plot.subtitle = element_text(face = "italic", size = 12, hjust = 0),
+    legend.position = "bottom",
+    legend.title=element_blank(),
+    axis.text.y = element_text(size = 10),
+    axis.text.x = element_text(size = 10),
+    axis.title = element_blank(),
+    panel.grid.major.y = element_line(color = "gray", linetype = "dashed", size = 0.3)
+  ) 
+```
+#### Second most voted party by population when the first id PSOE
+```{r}
+# Step 1: Create population categories with ordered factors for PP
+pp_first <- pp_first %>%
+  mutate(
+    population_category = factor(
+      case_when(
+        population < 10000 ~ "Pueblo Pequeño",
+        population >= 10000 & population < 50000 ~ "Pueblo Mediano",
+        population >= 50000 & population < 100000 ~ "Pueblo Grande",
+        population >= 100000 & population < 500000 ~ "Ciudad Pequeña",
+        population >= 500000 & population < 1000000 ~ "Gran Ciudad",
+        population >= 1000000 ~ "Metrópolis"
+      ),
+      levels = c("Pueblo Pequeño", "Pueblo Mediano", "Pueblo Grande", 
+                 "Ciudad Pequeña", "Gran Ciudad", "Metrópolis")
+    )
+  )
+
+# Step 2: Loop through elections and create a plot for each election for PP
+unique_dates_pp <- unique(pp_first$date_elec)
+plots <- list()
+
+# Create a list to store plots for PP
+plots_pp <- list()
+
+for (date in unique_dates_pp) {
+  # Ensure `date` is treated as a valid Date object
+  current_date <- as.Date(date)
+  
+  # Filter data for the specific election date
+  data_filtered <- pp_first %>%
+    filter(date_elec == current_date) %>%
+    group_by(population_category, second_party) %>%
+    summarise(
+      total_votes = sum(second_votes, na.rm = TRUE),
+      .groups = "drop"
+    )
+  
+  # Create the plot
+  plot <- ggplot(data_filtered, aes(x = population_category, 
+                                    y = total_votes, 
+                                    fill = second_party)) +
+    geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+    scale_fill_manual(values = c(
+      "PSOE" = "#f20400", 
+      "PODEMOS-IU" = "#663278", 
+      "VOX" = "#5AB531", 
+      "CS" = "#EB6109"
+    )) +
+    scale_y_continuous(labels = scales::comma) + 
+    labs(
+      title = paste("Second Party by Population for Election on", format(current_date, "%Y-%m-%d")),  # Format the date properly
+      x = "Population Category",
+      y = "Total Votes"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+      axis.text.x = element_text(size = 10, angle = 45, hjust = 1),
+      axis.text.y = element_text(size = 10),
+      legend.position = "bottom",
+      legend.title = element_blank()  # Remove legend title
+    )
+  
+  # Save the plot to the list
+  plots_pp[[as.character(current_date)]] <- plot
+}
+
+# Step 3: Display all plots for PP (one at a time)
+for (date in unique_dates_pp) {
+  print(plots_pp[[as.character(as.Date(date))]])
+}
 ```
 
 ### 3. Who benefits from low turnout?
