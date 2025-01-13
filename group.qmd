@@ -562,6 +562,17 @@ party_colors <- c(
 # Count the number of municipalities each party won in each election
 library(forcats)
 
+party_winners <- winners100k |> 
+  group_by(party_code) |> 
+  mutate(total_wins = n()) |> 
+  mutate(party_grouped = party_code) |>  # Removed the "Other" condition
+  ungroup() |> 
+  group_by(date_elec, party_grouped) |> 
+  summarise(num_municipalities = n(), .groups = "drop")
+
+party_winners <- party_winners |> 
+  mutate(party_grouped = fct_reorder(party_grouped, -num_municipalities))
+
 ggplot(party_winners, aes(x = party_grouped, y = num_municipalities, fill = party_grouped)) +
   geom_bar(stat = "identity") +
   facet_wrap(~ date_elec, scales = "free_y", ncol = 3) +
