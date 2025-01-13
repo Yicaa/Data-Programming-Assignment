@@ -562,26 +562,35 @@ party_colors <- c(
 # Count the number of municipalities each party won in each election
 library(forcats)
 
+party_winners <- winners100k |> 
+  group_by(party_code) |> 
+  mutate(total_wins = n()) |> 
+  mutate(party_grouped = party_code) |>  # Removed the "Other" condition
+  ungroup() |> 
+  group_by(date_elec, party_grouped) |> 
+  summarise(num_municipalities = n(), .groups = "drop")
+
 party_winners <- party_winners |> 
-  mutate(party_grouped = fct_reorder(party_grouped, -num_municipalities)) 
+  mutate(party_grouped = fct_reorder(party_grouped, -num_municipalities))
 
 ggplot(party_winners, aes(x = party_grouped, y = num_municipalities, fill = party_grouped)) +
-  geom_bar(stat = "identity") + 
-  facet_wrap(~ date_elec, scales = "free_y", ncol = 3) + 
-  scale_fill_manual(values = party_colors, name = "Winning Party (Code)") + 
+  geom_bar(stat = "identity") +
+  facet_wrap(~ date_elec, scales = "free_y", ncol = 3) +
+  scale_fill_manual(values = party_colors) +
   labs(
     title = "Winning Parties in Municipalities with >100k Population",
-    x = "Winning Party",
+    x = NULL,
     y = "Number of Municipalities Won"
   ) +
-  theme_minimal(base_size = 14) + 
+  theme_minimal(base_size = 14) +
   theme(
-    axis.text.x = element_blank(), 
-    axis.ticks.x = element_blank(),
-    legend.position = "right", 
-    legend.title = element_text(size = 12), 
-    legend.text = element_text(size = 10), 
-    strip.text = element_text(size = 12, face = "bold") 
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1), 
+    axis.ticks.x = element_line(),       
+    axis.line.y = element_blank(),       
+    axis.line.x = element_blank(),       
+    panel.grid.major.x = element_blank(),
+    legend.position = "none",  
+    strip.text = element_text(size = 12, face = "bold")
   )
 ```
 
@@ -933,7 +942,6 @@ ggplot(polling_err, aes(x = reorder(party_code, avg_err), y = avg_err, fill = fa
 ```
 
 Bigger party might be subject to bigger errors because they are voted by more people (ex. PNV cannot be over/underestimated by several percentage points as it only receives 1% of votes)
-```
 
 ### 6. Which polling houses got it right the most and which ones deviated the most from the results?
 
@@ -942,20 +950,6 @@ Bigger party might be subject to bigger errors because they are voted by more pe
 ```
 
 ## Additional questions
-
-Confirm with the group your original analysis question to avoid clashing ideas :)
-
-SOME IDEAS FOR THE ORIGINAL QUESTIONS TO START?
-
--   Which regions had the most predictable votes (i.e. consistently voted for the same party) and which regions were the most undecided (i.e. had the most variance in there votes across) between the 2008 and 2019 elections?
-
-- ✅ Map the outcomes over time - plotly on the results? Isabel has some interest but tbc if we will Map.
-
--   Can we load in other data? think that would go down well? Maybe predict the next election results based on previous trends of the 5 years and compare to see if the following election followed the trend? Think Javi would be happy with new data.
-
--   Which municipalities voting patterns were most consistent with the national trends?
-
--   Which 2 media/pollster outlets had the most polarized estimates of each election?
 
 ### 7. Jacklyn and Linghan
 
