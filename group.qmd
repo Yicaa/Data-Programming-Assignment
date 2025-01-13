@@ -518,7 +518,41 @@ The `turnout` data includes:
 ### 5. How to calibrate the error of the polls (remember that the polls are voting intentions at national level)?
 
 ```{r}
+survey_q5 <- final_surveys |> 
+  # Should I drop NA turnout
+  #drop_na(turnout) |>
+  summarise(avg_vote = mean(votes), .by = c(date_elec, party_code))
 
+survey_q5 |> 
+  summarise(sum(avg_vote), .by = date_elec) # Why those this happen? is it fine?
+
+survey_turnout <- final_surveys |> 
+  drop_na(turnout) |> 
+  summarise(avg_turnout = mean(turnout), .by = date_elec)
+
+survey_q5 <- survey_q5 |> 
+  left_join(survey_turnout, by = join_by(date_elec))
+
+election_q5 <- final_election |>
+  summarise(party_votes = sum(party_ballots), .by = c(date_elec, party_code))
+
+# Maybe I should not use total votes but valid votes
+turnout_q5 <- turnout |> 
+  summarise(tot_votes = sum(total_votes), tot_pop = sum(population),
+            .by = c(date_elec)) |> 
+  mutate(turnout = (tot_votes/tot_pop)*100)
+
+election_q5 <- election_q5 |> 
+  left_join(turnout_q5, by = join_by(date_elec)) |> 
+  mutate(share_votes = (party_votes/tot_votes)*100)
+
+final_q5 <- survey_q5 |> 
+  left_join(election_q5, by = join_by(date_elec, party_code)) |> 
+  select(-tot_votes, -tot_pop, -party_votes) |> 
+  mutate(polling_error = share_votes - avg_vote)
+
+# Either plot avg polling error by party or dynamically by party and election
+# Plot polling error vs turnout/turnout difference?
 ```
 
 ### 6. Which polling houses got it right the most and which ones deviated the most from the results?
