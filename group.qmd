@@ -130,6 +130,7 @@ tidy_surveys <- tidy_surveys %>%
       party_raw == "EAJ-PNV" ~ "PARTIDO NACIONALISTA VASCO",
       party_raw == "ERC" ~ "ESQUERRA REPUBLICANA DE CATALUNYA",
       party_raw == "IU" ~ "UNIDAS PODEMOS - IU",
+      party_raw == "UP" ~ "UNIDAS PODEMOS - IU",
       party_raw == "PP" ~ "PARTIDO POPULAR",
       party_raw == "BNG" ~ "BLOQUE NACIONALISTA GALLEGO",
       party_raw == "CS" ~ "CIUDADANOS",
@@ -522,7 +523,6 @@ ggplot(party_winners, aes(x = party_grouped, y = num_municipalities, fill = part
 ---
 ## 2. Which party was the second when the first was the PSOE? And when the first was the PP? {visibility="hidden"}
 
-
 #### Identify the First and Second Parties
 
 ```{r}
@@ -813,15 +813,174 @@ for (date in unique_dates_pp) {
 }
 ```
 
--------------------
-
-## 3. Who benefits from low turnout?{visibility="hidden"}
+#### For the presentation 
 ```{r}
-
+pp_first <- pp_first |> 
+  mutate(
+    population_category = factor(
+      case_when(
+        population < 10000 ~ "<10.000",
+        population >= 10000 & population < 50000 ~ ">= 10.000 & < 50.000",
+        population >= 50000 & population < 100000 ~ ">= 50.000 & < 100.000",
+        population >= 100000 & population < 500000 ~ ">= 100.000 & < 500.000",
+        population >= 500000 & population < 1000000 ~ ">= 500.000 & < 1.000.000",
+        population >= 1000000 ~ ">= 1.000.000"
+      ),
+      levels = c("<10.000", ">= 10.000 & < 50.000", ">= 50.000 & < 100.000", 
+                 ">= 100.000 & < 500.000", ">= 500.000 & < 1.000.000", ">= 1.000.000")
+    )
+  )
+data_filtered_2019 <- pp_first |> 
+  filter(date_elec == as.Date("2019-04-28")) |> 
+  group_by(population_category, second_party) |> 
+  summarise(
+    total_votes = sum(second_votes, na.rm = TRUE),
+    .groups = "drop"
+  )
+plot_2019 <- ggplot(data_filtered_2019, aes(x = population_category, 
+                                            y = total_votes, 
+                                            fill = second_party)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+  scale_fill_manual(values = c(
+    "PSOE" = "#f20400", 
+    "PODEMOS-IU" = "#663278", 
+    "VOX" = "#5AB531", 
+    "CS" = "#EB6109"
+  )) +
+  scale_y_continuous(labels = scales::comma) + 
+  labs(
+    title = "Second Party by Population for Election on 2019-04-28",
+    x = "Inhabitants per city",
+    y = "Total Votes"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+    axis.text.x = element_text(size = 10, angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 10),
+    legend.position = "bottom",
+    legend.title = element_blank()  # Remove legend title
+  )
+print(plot_2019)
 ```
 
+### 3. Who benefits from low turnout?
 
--------------------
+```{r}
+library(ggplot2)
+library(dplyr)
+library(forcats)
+library(scales)
+
+# Define a color mapping that matches the logo colors of the parties
+color_mapping <- c(
+  "PSOE" = "#E41A1C",    
+  "PP" = "skyblue",      
+  "UP-IU" = "#984EA3",   
+  "OTHER" = "#999999",   
+  "ERC" = "#FF7F00",     
+  "PNV" = "#A65628",     
+  "BILDU" = "#4DAF4A",   
+  "CS" = "#FFFF33",      
+  "CIU" = "#66C2A5",     
+  "VOX" = "#A6D854",     
+  "COMPROMIS" = "#B3B3B3",
+  "BNG" = "#8DA0CB",     
+  "EH-BILDU" = "pink",
+  "PODEMOS-IU" = "#FF33FF", 
+  "MP" = "#FFD700",     
+  "EAJ-PNV" = "#1B9E77"  
+)
+
+turnout2 <- final_election |> 
+  mutate(actual_turnout = (total_votes / population) * 100)
+
+# Determine the low turnout threshold (25th percentile)
+low_turnout_threshold <- quantile(turnout2$actual_turnout, 0.25, na.rm = TRUE)
+
+low_turnout_data <- turnout2 |> 
+  filter(actual_turnout < low_turnout_threshold)
+
+# Summarize party performance in low turnout areas
+low_turnout_summary <- low_turnout_data |> 
+  group_by(party_code) |> 
+  summarise(
+    total_ballots = sum(party_ballots, na.rm = TRUE),
+    vote_share = (total_ballots / sum(low_turnout_data$party_ballots)) * 100
+  ) |> 
+  ungroup() |> 
+  mutate(party_code = fct_reorder(party_code, vote_share))
+
+ggplot(low_turnout_summary, aes(x = party_code, y = vote_share, fill = party_code)) +
+  geom_bar(stat = "identity", color = "black", width = 0.7) +
+  labs(
+    title = "Vote Share by Party in Low Turnout Areas (<70.7%)",
+    subtitle = paste("Threshold for low turnout is", round(low_turnout_threshold, 1), "%"),
+    x = "Party",
+    y = "Vote Share (%)"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 10, color = "grey40")
+  ) +
+  scale_fill_manual(values = color_mapping) +
+  scale_y_continuous(labels = scales::percent_format(scale = 1))
+```
+Additionally, we will examine municipalities with exceptionally low turnout rates (below 0.45) to determine whether the outcomes differ significantly.
+
+```{r}
+# Analyze performance in extreme low turnout areas (<45%)
+extreme_low_turnout_threshold <- 45
+extreme_low_turnout_data <- turnout2 |> 
+  filter(actual_turnout < extreme_low_turnout_threshold)
+
+# Summarize party performance in extreme low turnout areas
+extreme_low_turnout_summary <- extreme_low_turnout_data |> 
+  group_by(party_code) |> 
+  summarise(
+    total_ballots = sum(party_ballots, na.rm = TRUE),
+    vote_share = (total_ballots / sum(extreme_low_turnout_data$party_ballots)) * 100
+  ) |> 
+  ungroup() |> 
+  mutate(party_code = fct_reorder(party_code, vote_share))
+
+ggplot(extreme_low_turnout_summary, aes(x = party_code, y = vote_share, fill = party_code)) +
+  geom_bar(stat = "identity", color = "black", width = 0.7) +
+  labs(
+    title = "Vote Share by Party in Extreme Low Turnout Areas (<45%)",
+    subtitle = "Focus on regions with significantly low turnout rates",
+    x = "Party",
+    y = "Vote Share (%)"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 10, color = "grey40")
+  ) +
+  scale_fill_manual(values = color_mapping) +
+  scale_y_continuous(labels = scales::percent_format(scale = 1))
+```
+
+```{r}
+total_extreme_low_votes <- extreme_low_turnout_data |> 
+  group_by(code_community, date_elec) |> 
+  summarise(
+    extreme_low_votes = length(code_community), 
+    .groups = "drop"
+  ) |> 
+  summarise(total_extreme_low_votes = sum(extreme_low_votes)) |> 
+  pull(total_extreme_low_votes)
+total_extreme_low_votes
+
+extreme_low_turnout_data |> 
+  group_by(code_community, date_elec) |> 
+  summarise(extreme_low_votes = length(code_community),.groups = "drop" ) |> 
+  pivot_wider(names_from = date_elec,
+              values_from = extreme_low_votes) 
+```
 
 ### Q3
 ```{r}
@@ -897,9 +1056,9 @@ ggplot(polling_err, aes(x = reorder(party_code, avg_err), y = avg_err, fill = fa
     x = "Party",
     # y = "Average Polling Error")
     y = paste("\u2190 Underestimated", strrep(" ", 35), "Overestimated \u2192")) +
-  scale_y_continuous(limits = c(-7,5), 
+  scale_y_continuous(limits = c(-5,3), 
                      expand = expansion(add = c(0,0)),
-                     breaks = c(-6, -4, -2, 0, 2, 4)) +
+                     breaks = c(-4, -2, 0, 2)) +
   theme_minimal() +
   theme(
     legend.position = NULL,
@@ -910,6 +1069,7 @@ ggplot(polling_err, aes(x = reorder(party_code, avg_err), y = avg_err, fill = fa
     axis.title.y = element_text(size = 8)) +
   guides(fill = guide_legend(title = "Political Party"))
 ```
+
 
 -------------------
 
@@ -1018,12 +1178,53 @@ ggplot(wmae, aes(x = pollster, y = WMAE, fill = WMAE)) +
 
 # Exploratory questions
 
--------------------
-
-## 7. Jacklyn and Linghan {visibility="hidden"}
+### 7. How consistent are the survey projections across different election periods? Identify trends or patterns in the prediction biases over time and analyze if certain parties consistently experience higher deviations.
 
 ```{r}
+# Define a function to analyze prediction trends over time
+analyze_prediction_trends <- function(final_election, final_surveys) {
+final_election$date_elec <- as.Date(final_election$date_elec)
+final_surveys$date_elec <- as.Date(final_surveys$date_elec)
+election_aggregated <- final_election |> 
+    group_by(party_code, party_main, date_elec) |> 
+    summarise(
+      valid_votes = sum(valid_votes, na.rm = TRUE),
+      party_ballots = sum(party_ballots, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    mutate(actual_vote_share = (party_ballots / valid_votes) * 100)
+survey_aggregated <- final_surveys |> 
+    group_by(party_code, party, date_elec) |> 
+    summarise(predicted_vote_share = mean(votes, na.rm = TRUE),
+              .groups = "drop")
 
+merged_trend_data <- merge(election_aggregated, survey_aggregated, 
+                             by = c("party_code", "date_elec"))
+
+merged_trend_data <- merged_trend_data  |> 
+    mutate(prediction_bias = predicted_vote_share - actual_vote_share)
+
+  return(merged_trend_data)
+}
+
+trend_data <- analyze_prediction_trends(final_election, final_surveys)
+trend_data  |> 
+  ggplot(aes(x = date_elec, y = prediction_bias, color = party_code, group = party_code)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
+  labs(
+    title = "Prediction Bias Trends Over Time",
+    subtitle = "Analyzing consistency of survey projections across election periods",
+    x = "Election Date",
+    y = "Prediction Bias (%)",
+    color = "Party"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 10, color = "grey40")
+  )
 ```
 
 -------------------
