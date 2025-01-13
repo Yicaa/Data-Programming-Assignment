@@ -1,0 +1,20 @@
+---
+title: "Group Assignment"
+author:   
+  - "Marco Boso 100535153"
+  - "Diego Paroli 100554973"
+  - "Yijia Lin 100452242"
+  - "Bradley McKenzie 100535241"
+  - "Linghan Zheng 100540803"
+  - "Jia Lin 100536210"
+  - "Isabel Monge 100542532"
+format:
+  revealjs:
+    slide-number: "c/t"
+    theme: moon
+    incremental: true
+    width: 1920
+    height: 1080
+editor: visual
+---
+
