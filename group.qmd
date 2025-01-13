@@ -314,7 +314,7 @@ party_names <- tibble(names = unique(election_pivot$party))
 
 party_names <- party_names |> 
     mutate(party_main = case_when(
-                str_detect(names, "(?i)PSOE|PARTIDO DOS SOCIALISTAS DE GALICIA|PARTIDO SOCIALISTA DE EUSKADI|PARTIDO SOCIALISTA OBRERO ESPAÑOL|PARTIT SOCIALISTA OBRER ESPANYOL") ~ "PARTIDO SOCIALISTA OBRERO ESPAÑOL",
+                str_detect(names, "(?i)PSOE|PARTIDO DOS SOCIALISTAS DE GALICIA|PARTIDO SOCIALISTA DE EUSKADI|PARTIDO SOCIALISTA OBRERO ESPAÑOL|PARTIT SOCIALISTA OBRER ESPANYOL|PARTIT DELS SOCIALISTES DE CATALUNYA") ~ "PARTIDO SOCIALISTA OBRERO ESPAÑOL",
                 str_detect(names, "(?i)PARTIDO POPULAR") ~ "PARTIDO POPULAR",
                 str_detect(names, "(?i)CIUDADANOS-PARTIDO DE LA CIUDADANIA|CIUDADANOS-PARTIDO DE LA CIUDADANÍA|CIUDADANOS PARTIDO DE LA CIUDADANIA|CIUDADANOS PARTIDO DE LA CIUDADANÍA|CIUDADANOS, PARTIDO DE LA CIUDADANÍA|CIUTADANS") ~ "CIUDADANOS",
                 str_detect(names, "(?i)EUZKO ALDERDI JELTZALEA-PARTIDO NACIONALISTA VASCO") ~ "PARTIDO NACIONALISTA VASCO",
@@ -539,6 +539,52 @@ final_election |>
   pivot_wider(names_from = date_elec, 
               values_from = population)
 ```
+Now we will graph the results: 
+```{r}
+# Define custom colors for the given party abbreviations
+party_colors <- c(
+  "PSOE" = "#EF1C27",       # PARTIDO SOCIALISTA OBRERO ESPAÑOL
+  "EAJ-PNV" = "#01796F",    # PARTIDO NACIONALISTA VASCO
+  "ERC" = "#FFD700",        # ESQUERRA REPUBLICANA DE CATALUNYA
+  "PODEMOS-IU" = "#5C2D91", # UNIDAS PODEMOS - IU
+  "PP" = "#0454A3",         # PARTIDO POPULAR
+  "VOX" = "#63BE21",        # VOX
+  "CS" = "#EB6109",         # CIUDADANOS
+  "BNG" = "#0093DD",        # BLOQUE NACIONALISTA GALLEGO
+  "CIU" = "#FFB232",        # CONVERGÈNCIA I UNIÓ
+  "EH-BILDU" = "#A6CE39",   # EH - BILDU
+  "MP" = "#0CDCC3",         # MÁS PAÍS
+  "Other" = "#808080"       # Other parties
+)
+```
+
+```{r}
+# Count the number of municipalities each party won in each election
+library(forcats)
+
+party_winners <- party_winners |> 
+  mutate(party_grouped = fct_reorder(party_grouped, -num_municipalities)) 
+
+ggplot(party_winners, aes(x = party_grouped, y = num_municipalities, fill = party_grouped)) +
+  geom_bar(stat = "identity") + 
+  facet_wrap(~ date_elec, scales = "free_y", ncol = 3) + 
+  scale_fill_manual(values = party_colors, name = "Winning Party (Code)") + 
+  labs(
+    title = "Winning Parties in Municipalities with >100k Population",
+    x = "Winning Party",
+    y = "Number of Municipalities Won"
+  ) +
+  theme_minimal(base_size = 14) + 
+  theme(
+    axis.text.x = element_blank(), 
+    axis.ticks.x = element_blank(),
+    legend.position = "right", 
+    legend.title = element_text(size = 12), 
+    legend.text = element_text(size = 10), 
+    strip.text = element_text(size = 12, face = "bold") 
+  )
+```
+
 
 ### 2. Which party was the second when the first was the PSOE? And when the first was the PP?
 
