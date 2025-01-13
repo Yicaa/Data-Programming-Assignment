@@ -894,11 +894,6 @@ ggplot(polling_err, aes(x = reorder(party_code, avg_err), y = avg_err, fill = fa
 
 Bigger party might be subject to bigger errors because they are voted by more people (ex. PNV cannot be over/underestimated by several percentage points as it only receives 1% of votes)
 
-
-```{r}
-
-```
-
 ### 6. Which polling houses got it right the most and which ones deviated the most from the results?
 
 ```{r}
