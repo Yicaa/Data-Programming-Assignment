@@ -407,6 +407,24 @@ The `turnout` data includes:
 -   information on the number of votes and type of vote (e.g. valid or blank/null) per municipality in each election.
 
 ---
+
+## Data cleaning highlights
+We created three aggregated data files to work with based on the survey data; election data and election turnout. 
+
+High dimensionality was the key to address, e.g. election data \ with it's 471 columns. We ended up with a 16 column table that removed entirely missing value columns (9). For this, our friends were pivot_longer, distinct and summarise. 
+
+Election identifiers:
+
+-   Timing -\> date
+-   Location information -\> code_community (autonomous community), code_province, code_municipality, municipality, population
+-   General election information -\> polling_stations, participation_1, participation_2, blank_votes, null_votes, valid_votes, total_votes
+-   Party votes received -\> party_main, party_code, party_ballots
+
+```{r, echo = FALSE}
+head(final_election)
+```
+
+---
 # Mandatory questions
 
 ---
@@ -463,7 +481,8 @@ final_election |>
 ---
 
 ### Q1 : Dominant parties in municipalities with +100k habitants
-ANY DESCRIPTION YOU WANT HERE
+
+There were only 48 municipalities with over 100k people. 2 of the regions, Cádiz and Dos Hermanas had a varying population that was over 100k in some periods and under in others. We created a table with the winners and total % of vote, then plotted over time. PP have a stronghold in some areas. 
 
 ```{r}
 #| echo: false
