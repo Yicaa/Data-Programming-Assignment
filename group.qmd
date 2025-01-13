@@ -554,7 +554,7 @@ total_votes_summary<- final_election |>
   dplyr::select(-party_main, -party_code, -party_ballots) |> 
   distinct() |> 
   group_by(date_elec) |> 
-  summarise(sum_total_votes=sum(total_votes))
+  summarise(sum_total_votes=sum(valid_votes))
 
 final_election_summary<- final_election_summary |> 
   left_join(total_votes_summary, by=c("date_elec"="date_elec")) |> 
@@ -572,7 +572,7 @@ final_election_summary_v2 <- final_election_summary |>
   arrange(date_elec, desc(national_share)) |>  
   mutate(rank_pos = dense_rank(-national_share)) |>  
   mutate(weight = if_else(rank_pos <= 5, 0.7, 0.3)) |>  
-  ungroup()  
+  ungroup()
 ```
 
 Then, we can now calculate the weighted MAE of each pollster:
