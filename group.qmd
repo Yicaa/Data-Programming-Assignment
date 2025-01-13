@@ -613,9 +613,6 @@ pp_summary_per_year <- pp_first %>%
 ```
 
 PSOE was the second party when PP was the winner in almost every election. PODEMOS-IU was the second party in the elections of 2015 and 2016 after PP.
----
-### Q2 : Primary Runner-Up Parties to PSOE and PP in Elections
-ANY TEXT YOU WANT
 
 ```{r}
 #|echo: false
@@ -813,7 +810,10 @@ for (date in unique_dates_pp) {
 }
 ```
 
-#### For the presentation 
+---
+### Q2 : Primary Runner-Up Parties to PSOE and PP in Elections
+ANY TEXT YOU WANT
+
 ```{r}
 pp_first <- pp_first |> 
   mutate(
@@ -841,12 +841,7 @@ plot_2019 <- ggplot(data_filtered_2019, aes(x = population_category,
                                             y = total_votes, 
                                             fill = second_party)) +
   geom_bar(stat = "identity", position = "dodge", width = 0.7) +
-  scale_fill_manual(values = c(
-    "PSOE" = "#f20400", 
-    "PODEMOS-IU" = "#663278", 
-    "VOX" = "#5AB531", 
-    "CS" = "#EB6109"
-  )) +
+  scale_fill_manual(values = party_colors) +
   scale_y_continuous(labels = scales::comma) + 
   labs(
     title = "Second Party by Population for Election on 2019-04-28",
