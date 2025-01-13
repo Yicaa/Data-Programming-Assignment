@@ -568,7 +568,8 @@ ggplot(polling_err, aes(x = reorder(party_code, avg_err), y = avg_err, fill = fa
     title = "Polling Error by Political Party",
     subtitle = "Average polling error for elections between 2008 and 2019 by main political party",
     x = "Party",
-    y = "Average Polling Error") +
+    # y = "Average Polling Error")
+    y = paste("\u2190 Underestimated", strrep(" ", 35), "Overestimated \u2192")) +
   scale_y_continuous(limits = c(-7,5), 
                      expand = expansion(add = c(0,0)),
                      breaks = c(-6, -4, -2, 0, 2, 4)) +
@@ -578,8 +579,13 @@ ggplot(polling_err, aes(x = reorder(party_code, avg_err), y = avg_err, fill = fa
     plot.title = element_text(size = 14, face = "bold"),
     plot.subtitle = element_text(size = 12),
     axis.text.x = element_text(size = 5), 
-    panel.grid.minor = element_blank()) +
-  guides(color = guide_legend(title = "Political Party"))
+    panel.grid.minor = element_blank(),
+    axis.title.y = element_text(size = 8)) +
+  guides(fill = guide_legend(title = "Political Party"))
+
+#Bigger party might be subject to bigger errors because they are voted by more people (ex. PNV cannot be over/underestimated by several percentage points as it only receives 1% of votes)
+# Should we rescale the analysis??
+
 # Either plot avg polling error by party or dynamically by party and election
 # Plot polling error vs turnout/turnout difference?
 
