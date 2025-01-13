@@ -876,7 +876,61 @@ for (date in unique_dates_pp) {
 ### 5. How to calibrate the error of the polls (remember that the polls are voting intentions at national level)?
 
 ```{r}
+survey_q5 <- final_surveys |> 
+  summarise(avg_voting_intention = mean(votes), .by = c(date_elec, party_code))
 
+# The means do not add up to 1 (sum surveys just do not add up to 1)
+# survey_q5 |> 
+#   summarise(sum(avg_vote), .by = date_elec)
+
+election_q5 <- final_election |>
+  summarise(party_votes = sum(party_ballots), .by = c(date_elec, party_code))
+
+turnout_q5 <- turnout |> 
+  summarise(tot_votes = sum(total_votes), 
+            valid_votes = sum(valid_votes + blank_votes), 
+            null_votes = sum(null_votes),
+            tot_pop = sum(population),
+            .by = c(date_elec)) |> 
+  mutate(turnout = (tot_votes/tot_pop)*100)
+
+election_q5 <- election_q5 |> 
+  left_join(turnout_q5, by = join_by(date_elec)) |> 
+  mutate(share_votes = (party_votes/valid_votes)*100)
+
+final_q5 <- survey_q5 |> 
+  left_join(election_q5, by = join_by(date_elec, party_code)) |> 
+  select(-tot_votes, -tot_pop, -party_votes) |> 
+  mutate(polling_error = avg_voting_intention - share_votes)
+
+polling_err <- final_q5 |> 
+  summarise(avg_err = mean(polling_error), .by = party_code)
+
+ggplot(polling_err, aes(x = reorder(party_code, avg_err), y = avg_err, fill = factor(party_code))) +
+  geom_bar(stat = "identity") +  
+  scale_fill_manual(values = party_colors) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  labs(
+    title = "Polling Error by Political Party",
+    subtitle = "Average polling error for elections between 2008 and 2019 by main political party",
+    x = "Party",
+    # y = "Average Polling Error")
+    y = paste("\u2190 Underestimated", strrep(" ", 35), "Overestimated \u2192")) +
+  scale_y_continuous(limits = c(-7,5), 
+                     expand = expansion(add = c(0,0)),
+                     breaks = c(-6, -4, -2, 0, 2, 4)) +
+  theme_minimal() +
+  theme(
+    legend.position = NULL,
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 12),
+    axis.text.x = element_text(size = 5), 
+    panel.grid.minor = element_blank(),
+    axis.title.y = element_text(size = 8)) +
+  guides(fill = guide_legend(title = "Political Party"))
+```
+
+Bigger party might be subject to bigger errors because they are voted by more people (ex. PNV cannot be over/underestimated by several percentage points as it only receives 1% of votes)
 ```
 
 ### 6. Which polling houses got it right the most and which ones deviated the most from the results?
@@ -907,13 +961,13 @@ SOME IDEAS FOR THE ORIGINAL QUESTIONS TO START?
 
 ```
 
-### 8. Yijia and Diego
+### 8.
 
 ```{r}
 
 ```
 
-### How has electoral support for smaller parties evolved over time?
+### 9. How has electoral support for smaller parties evolved over time?
 
 The maps show a significant increase in support for smaller parties over time by autonomous community, with darker regions indicating higher percentages. Madrid, for example, rises from around 10% in 2008 to a peak of 54% in April 2019. Northern communities including Catalonia, Navarra, and the Basque Country consistently show high levels of support for small parties.
 
