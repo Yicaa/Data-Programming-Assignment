@@ -462,7 +462,7 @@ final_election |>
 ```
 ---
 
-### Q1
+### Q1 : Dominant parties in municipalities with +100k habitants
 ANY DESCRIPTION YOU WANT HERE
 
 ```{r}
@@ -614,7 +614,7 @@ pp_summary_per_year <- pp_first %>%
 
 PSOE was the second party when PP was the winner in almost every election. PODEMOS-IU was the second party in the elections of 2015 and 2016 after PP.
 ---
-### Q2
+### Q2 : Primary Runner-Up Parties to PSOE and PP in Elections
 ANY TEXT YOU WANT
 
 ```{r}
@@ -986,7 +986,7 @@ extreme_low_turnout_data |>
 
 ------------------------------------------------------------------------
 
-### Q3
+### Q3 : Impact of low turnout on election outcomes
 ```{r}
 
 ```
@@ -1058,7 +1058,7 @@ extreme_low_turnout_data |>
 
 -------------------
 
-### Q4
+### Q4 : Relationship between census and vote (urban vs. rural)
 
 -------------------
 
@@ -1102,7 +1102,7 @@ Bigger party might be subject to bigger errors because they are voted by more pe
 
 -------------------
 
-### Q5
+### Q5 : Polling error
 text here
 ```{r}
 #| echo: false
@@ -1208,7 +1208,7 @@ tail(wmae$pollster[order(wmae$WMAE)], 5)
 
 -------------------
 
-### Q6
+### Q6 : Polling house accuracy
 text here
 
 ```{r WMAE,warning = FALSE}
@@ -1272,7 +1272,7 @@ merged_trend_data <- merged_trend_data  |>
 
 -------------------
 
-### Q7
+### Q7 : Survey projection accuracy over time
 text here
 ```{r}
 trend_data <- analyze_prediction_trends(final_election, final_surveys)
@@ -1399,7 +1399,7 @@ The slope -0.01 can be interpreted in this way: If the population doubles, the t
 
 -------------------
 
-### Q8
+### Q8 : Turnout rate over time
 text here
 ```{r}
 
@@ -1464,11 +1464,8 @@ map_data <- spain_map |>
 
 -------------------
 
-### Q9
-How has electoral support for smaller parties evolved over time?
-```{r, out.height="80%"}
-  
-#| echo: false
+### Q9 : Electoral support for small parties over time
+```{r}
 
 # Create the ggplot map
 gg_map <- ggplot(map_data) +
@@ -1513,6 +1510,12 @@ interactive_map <- interactive_map |>
     opts_hover(css = "fill: red")
   )
 
-# Display the interactive map
+# Fix sizing
+interactive_map <- girafe(
+  ggobj = gg_map,
+  width_svg = 5,  
+  height_svg = 3  
+)
+
 interactive_map
 ```
