@@ -942,7 +942,6 @@ ggplot(polling_err, aes(x = reorder(party_code, avg_err), y = avg_err, fill = fa
 ```
 
 Bigger party might be subject to bigger errors because they are voted by more people (ex. PNV cannot be over/underestimated by several percentage points as it only receives 1% of votes)
-```
 
 ### 6. Which polling houses got it right the most and which ones deviated the most from the results?
 
@@ -951,20 +950,6 @@ Bigger party might be subject to bigger errors because they are voted by more pe
 ```
 
 ## Additional questions
-
-Confirm with the group your original analysis question to avoid clashing ideas :)
-
-SOME IDEAS FOR THE ORIGINAL QUESTIONS TO START?
-
--   Which regions had the most predictable votes (i.e. consistently voted for the same party) and which regions were the most undecided (i.e. had the most variance in there votes across) between the 2008 and 2019 elections?
-
-- ✅ Map the outcomes over time - plotly on the results? Isabel has some interest but tbc if we will Map.
-
--   Can we load in other data? think that would go down well? Maybe predict the next election results based on previous trends of the 5 years and compare to see if the following election followed the trend? Think Javi would be happy with new data.
-
--   Which municipalities voting patterns were most consistent with the national trends?
-
--   Which 2 media/pollster outlets had the most polarized estimates of each election?
 
 ### 7. Jacklyn and Linghan
 
