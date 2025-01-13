@@ -39,7 +39,7 @@ library(sf)
 library(ggiraph)
 ```
 
-------------------------------------------------------------------------
+---
 
 ## Data Description {visibility="hidden"}
 
@@ -864,25 +864,6 @@ print(plot_2019)
 ## 3. Who benefits from low turnout? {visibility="hidden"}
 
 ```{r}
-# Define a color mapping that matches the logo colors of the parties
-color_mapping <- c(
-  "PSOE" = "#E41A1C",    
-  "PP" = "skyblue",      
-  "UP-IU" = "#984EA3",   
-  "OTHER" = "#999999",   
-  "ERC" = "#FF7F00",     
-  "PNV" = "#A65628",     
-  "BILDU" = "#4DAF4A",   
-  "CS" = "#FFFF33",      
-  "CIU" = "#66C2A5",     
-  "VOX" = "#A6D854",     
-  "COMPROMIS" = "#B3B3B3",
-  "BNG" = "#8DA0CB",     
-  "EH-BILDU" = "pink",
-  "PODEMOS-IU" = "#FF33FF", 
-  "MP" = "#FFD700",     
-  "EAJ-PNV" = "#1B9E77"  
-)
 
 turnout2 <- final_election |> 
   mutate(actual_turnout = (total_votes / population) * 100)
@@ -917,7 +898,7 @@ ggplot(low_turnout_summary, aes(x = party_code, y = vote_share, fill = party_cod
     plot.title = element_text(size = 14, face = "bold"),
     plot.subtitle = element_text(size = 10, color = "grey40")
   ) +
-  scale_fill_manual(values = color_mapping) +
+  scale_fill_manual(values = party_colors) +
   scale_y_continuous(labels = scales::percent_format(scale = 1))
 ```
 Additionally, we will examine municipalities with exceptionally low turnout rates (below 0.45) to determine whether the outcomes differ significantly.
@@ -952,7 +933,7 @@ ggplot(extreme_low_turnout_summary, aes(x = party_code, y = vote_share, fill = p
     plot.title = element_text(size = 14, face = "bold"),
     plot.subtitle = element_text(size = 10, color = "grey40")
   ) +
-  scale_fill_manual(values = color_mapping) +
+  scale_fill_manual(values = party_colors) +
   scale_y_continuous(labels = scales::percent_format(scale = 1))
 ```
 
@@ -974,7 +955,8 @@ extreme_low_turnout_data |>
               values_from = extreme_low_votes) 
 ```
 Basque nationalist parties achieve their highest scores in areas with extremely low voter turnout, which is due to the fact that Pais Vasco (code_community = 14) has the lowest turnout among all regions. A significant portion of this data comes from 2008, a year when an election boycott occurred in the region. Of the 948 instances where municipalities recorded a turnout below 45%, 624 took place during the 2008 election in Pais Vasco.
-------------------------------------------------------------------------
+
+---
 
 ### Q3 : Impact of low turnout on election outcomes
 Low Turnout Areas (<70.7%) PSOE and PP dominate low-turnout areas, securing the highest vote shares. Smaller parties like VOX, CS, and EH-BILDU have moderate presence, while regional parties and new entrants struggle to gain significant traction.
@@ -994,7 +976,7 @@ ggplot(low_turnout_summary, aes(x = party_code, y = vote_share, fill = party_cod
     plot.title = element_text(size = 14, face = "bold"),
     plot.subtitle = element_text(size = 10, color = "grey40")
   ) +
-  scale_fill_manual(values = color_mapping) +
+  scale_fill_manual(values = party_colors) +
   scale_y_continuous(labels = scales::percent_format(scale = 1))
 ```
 
@@ -1018,7 +1000,7 @@ ggplot(extreme_low_turnout_summary, aes(x = party_code, y = vote_share, fill = p
     plot.title = element_text(size = 14, face = "bold"),
     plot.subtitle = element_text(size = 10, color = "grey40")
   ) +
-  scale_fill_manual(values = color_mapping) +
+  scale_fill_manual(values = party_colors) +
   scale_y_continuous(labels = scales::percent_format(scale = 1))
 ```
 
@@ -1094,6 +1076,7 @@ I then used regression analysis to study the interaction effects of rural areas 
 Next, I used the code to generate the vote distribution of different parties in rural and urban areas and examined its relationship with population size. First, the code categorized constituencies as "rural" (population less than 10,000) or "urban" and then calculated the total votes for each party in both rural and urban areas. Visualization of the vote proportions of different parties in rural and urban areas revealed that PP had a higher vote proportion in rural areas, while PSOE and PODEMOS-IU had higher vote proportions in urban areas. This indicates significant differences in party support between rural and urban areas.
 
 Finally, I conducted a two-way ANOVA to examine the impact of rural classification (rural) and party (party_code) on vote percentage (vote_pct), as well as the interaction between the two. The analysis showed that the standalone effect of rural classification on vote percentage was not significant. However, the interaction between party and rural classification revealed significant differences in party support between rural and urban areas.
+
 -------------------
 
 ### Q4 : Relationship between census and vote (urban vs. rural)
@@ -1111,6 +1094,8 @@ There is no significant overall correlation between population size (log-transfo
 ```
 
 ---
+
+### Q4 : Relationship between census and vote (urban vs. rural)
 Different parties show varying trends in vote percentages across population scales (log-transformed), such as PP performing better in smaller constituencies (lower population), while PSOE and PODEMOS-IU perform better in larger constituencies (higher population).
 ```{r}
 #| echo: false
@@ -1127,6 +1112,8 @@ Different parties show varying trends in vote percentages across population scal
 ```
 
 ---
+
+### Q4 : Relationship between census and vote (urban vs. rural)
 Different parties show significant differences in support between rural and urban areas. For example, PP has higher support in rural areas, while PSOE and PODEMOS-IU have stronger support in urban areas.
 ```{r}
 #| echo: false
@@ -1323,33 +1310,15 @@ ggplot(wmae, aes(x = pollster, y = WMAE, fill = WMAE)) +
 
 ```
 
--------------------
+---
 
 # Exploratory questions
 
-------------------------------------------------------------------------
+---
 
 ## 7. How consistent are the survey projections across different election periods? Identify trends or patterns in the prediction biases over time and analyze if certain parties consistently experience higher deviations. {visibility="hidden"}
-
 ```{r}
-color_mapping <- c(
-  "PSOE" = "#E41A1C",    
-  "PP" = "skyblue",      
-  "UP-IU" = "#984EA3",   
-  "OTHER" = "#999999",   
-  "ERC" = "#FF7F00",     
-  "PNV" = "#A65628",     
-  "BILDU" = "#4DAF4A",   
-  "CS" = "#FFFF33",      
-  "CIU" = "#66C2A5",     
-  "VOX" = "#A6D854",     
-  "COMPROMIS" = "#B3B3B3",
-  "BNG" = "#8DA0CB",     
-  "EH-BILDU" = "pink",
-  "PODEMOS-IU" = "#FF33FF", 
-  "MP" = "#FFD700",     
-  "EAJ-PNV" = "#1B9E77"  
-)
+
 # Define a function to analyze prediction trends over time
 analyze_prediction_trends <- function(final_election, final_surveys) {
 final_election$date_elec <- as.Date(final_election$date_elec)
@@ -1376,11 +1345,12 @@ merged_trend_data <- merged_trend_data  |>
   return(merged_trend_data)
 }
 
+trend_data <- analyze_prediction_trends(final_election, final_surveys)
 trend_data |> 
   ggplot(aes(x = date_elec, y = prediction_bias, color = party_code, group = party_code)) +
   geom_line(size = 1) +
   geom_point(size = 2) +
-  scale_color_manual(values = color_mapping) +  
+  scale_color_manual(values = party_colors) +  
   labs(
     title = "Prediction Bias Trends Over Time",
     subtitle = "Analyzing consistency of survey projections across election periods",
@@ -1414,16 +1384,17 @@ Other and Smaller Parties:
 5.Regional parties like BNG and EH-BILDU had stable, mild biases.
 6.Newer parties like PODEMOS-IU faced significant fluctuations, especially in 2016.
 Overall: Major parties improved prediction accuracy, while newer and emerging parties faced greater challenges. Smaller parties were more consistent.
--------------------
+
+---
 
 ### Q7 : Survey projection accuracy over time
-Trends in survey prediction biases over time, focusing on bias evolution and accuracy for traditional, emerging, and regional parties. 
+Trends in survey prediction biases over time, focusing on bias evolution and accuracy for traditional, emerging, and regional parties. Insights for improving survey methods.
 ```{r}
 trend_data |> 
   ggplot(aes(x = date_elec, y = prediction_bias, color = party_code, group = party_code)) +
   geom_line(size = 1) +
   geom_point(size = 2) +
-  scale_color_manual(values = color_mapping) +  
+  scale_color_manual(values = party_colors) +  
   labs(
     title = "Prediction Bias Trends Over Time",
     subtitle = "Analyzing consistency of survey projections across election periods",
@@ -1439,7 +1410,7 @@ trend_data |>
   )
 ```
 
--------------------
+---
 
 ## 8. How has the turnout rate changed over time? And within each election year, how are turnout rates correlated with the municipalities' populations? {visibility="hidden"}
 
