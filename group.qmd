@@ -860,7 +860,12 @@ plot_2019 <- ggplot(data_filtered_2019, aes(x = population_category,
                                             y = total_votes, 
                                             fill = second_party)) +
   geom_bar(stat = "identity", position = "dodge", width = 0.7) +
-  scale_fill_manual(values = party_colors) +
+  scale_fill_manual(values = c(
+    "PSOE" = "#f20400", 
+    "PODEMOS-IU" = "#663278", 
+    "VOX" = "#5AB531", 
+    "CS" = "#EB6109"
+  )) +
   scale_y_continuous(labels = scales::comma) + 
   labs(
     title = "Second Party by Population for Election on 2019-04-28",
@@ -1189,8 +1194,6 @@ final_q5 <- survey_q5 |>
 
 polling_err <- final_q5 |> 
   summarise(avg_err = mean(polling_error), .by = party_code)
-
-
 ```
 
 Bigger party might be subject to bigger errors because they are voted by more people (ex. PNV cannot be over/underestimated by several percentage points as it only receives 1% of votes)
@@ -1198,7 +1201,6 @@ Bigger party might be subject to bigger errors because they are voted by more pe
 -------------------
 
 ### Q5 : Polling error
-text here
 ```{r}
 #| echo: false
 ggplot(polling_err, aes(x = reorder(party_code, avg_err), y = avg_err, fill = factor(party_code))) +
@@ -1224,7 +1226,6 @@ ggplot(polling_err, aes(x = reorder(party_code, avg_err), y = avg_err, fill = fa
     axis.title.y = element_text(size = 8)) +
   guides(fill = guide_legend(title = "Political Party"))
 ```
-
 
 -------------------
 
@@ -1716,6 +1717,7 @@ map_data <- spain_map |>
 -------------------
 
 ### Q9 : Electoral support for small parties over time
+Support for smaller parties increased significantly over time, peaking across most communities in April 2019.
 ```{r}
 
 # Create the ggplot map
@@ -1739,34 +1741,35 @@ gg_map <- ggplot(map_data) +
     subtitle = "Where 'Other' Excludes PP and PSOE",
     fill = "% Other Votes"
   ) +
+  scale_x_continuous(expand = c(0, 0)) + 
+  scale_y_continuous(expand = c(0, 0)) +
   theme_minimal() +
   theme(
     axis.text = element_blank(),
     axis.ticks = element_blank(),
     panel.grid = element_blank(),
-    strip.text = element_text(size = 8)
+    strip.text = element_text(size = 6),     
+    plot.title = element_text(size = 10),   
+    plot.subtitle = element_text(size = 8), 
+    legend.text = element_text(size = 7),   
+    legend.title = element_text(size = 8),  
+    plot.margin = margin(0, 0, 0, 0)
   )
 
 # Convert ggplot to an interactive plot with ggiraph
 interactive_map <- girafe(
   ggobj = gg_map,
-  width_svg = 10,
-  height_svg = 6
+  width_svg = 8,
+  height_svg = 4
 )
 
 # Adjust tooltip style
 interactive_map <- interactive_map |> 
   girafe_options(
     opts_tooltip(css = "background-color: white; color: black; border: 1px solid black; padding: 5px;"),
-    opts_hover(css = "fill: red")
+    opts_hover(css = "fill: red"),
+    opts_sizing(rescale = TRUE)
   )
-
-# Fix sizing
-interactive_map <- girafe(
-  ggobj = gg_map,
-  width_svg = 5,  
-  height_svg = 3  
-)
 
 interactive_map
 ```
