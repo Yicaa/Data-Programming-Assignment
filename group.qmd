@@ -963,7 +963,13 @@ SOME IDEAS FOR THE ORIGINAL QUESTIONS TO START?
 
 ```
 
-### 8. How has electoral support for smaller parties evolved over time?
+### 8.
+
+```{r}
+
+```
+
+### 9. How has electoral support for smaller parties evolved over time?
 
 The maps show a significant increase in support for smaller parties over time by autonomous community, with darker regions indicating higher percentages. Madrid, for example, rises from around 10% in 2008 to a peak of 54% in April 2019. Northern communities including Catalonia, Navarra, and the Basque Country consistently show high levels of support for small parties.
 
