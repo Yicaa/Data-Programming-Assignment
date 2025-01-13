@@ -1285,7 +1285,42 @@ tail(wmae$pollster[order(wmae$WMAE)], 5)
 -------------------
 
 ### Q6 : Polling house accuracy
-text here
+Which polling houses got it right the most and which ones deviated the most from the results?
+<br>
+<br>
+<br>
+Measurement criteria: weighted mean absolute error (WMAE) Weighting: 0.7 to the top five parties receiving the most votes in each general election, and a weight of 0.3 to the remaining parties.
+<br>
+```{r}
+#| echo: true
+final_election_summary_v2 <- final_election_summary |> 
+  group_by(date_elec) |>  
+  arrange(date_elec, desc(national_share)) |>  
+  mutate(rank_pos = dense_rank(-national_share)) |>  
+  mutate(weight = if_else(rank_pos <= 5, 0.7, 0.3)) |>  
+  ungroup()
+
+final_election_summary_v3 <- final_election_summary_v2 |> 
+  mutate(national_share=national_share*100) |> 
+  mutate(error = abs(votes - national_share)) 
+  
+wmae <- final_election_summary_v3 |> 
+  group_by(pollster) |> 
+  summarise(WMAE = sum(weight * error) / sum(weight)) |> 
+  ungroup() |> 
+  mutate(pollster = fct_reorder(pollster, WMAE, .desc = FALSE))
+```
+<br>
+```{r}
+#| echo: true
+#| layout-ncol: 2
+head(wmae$pollster[order(wmae$WMAE)], 5)
+tail(wmae$pollster[order(wmae$WMAE)], 5)
+```
+
+-------------------
+
+### Q6 : Visualization
 
 ```{r WMAE,warning = FALSE}
 ggplot(wmae, aes(x = pollster, y = WMAE, fill = WMAE)) +
@@ -1306,11 +1341,10 @@ ggplot(wmae, aes(x = pollster, y = WMAE, fill = WMAE)) +
     y = "Weighted Average Error"
   ) +
   scale_y_continuous(labels = scales::comma) +
-  scale_fill_gradient2(low = "green", mid = "#ffc403", high = "#c70b1f", midpoint = 3.2) 
+  scale_fill_gradient2(low = "green", mid = "#ffc403", high = "#c70b1f", midpoint = 1.8) 
 
 ```
 
----
 
 # Exploratory questions
 
@@ -1513,12 +1547,97 @@ The slope -0.01 can be interpreted in this way: If the population doubles, the t
 -------------------
 
 ### Q8 : Turnout rate over time
-text here
-```{r}
+How has the turnout rate changed over time? And within each election year, how are turnout rates correlated with the municipalities' populations?
 
+```{r,warning = FALSE}
+#| echo: false
+#| results: "show"
+question8<- final_election |> 
+  group_by(date_elec,municipality) |> 
+  summarize(population=mean(population),
+            total_votes=mean(total_votes),
+            turnout_rate=(total_votes/population),
+            .groups = "drop") 
+turnout_over_time <- question8 |> 
+  group_by(date_elec) |> 
+  summarize(avg_turnout = (sum(total_votes) / sum(population)),
+                           na.rm = TRUE, 
+                           .groups = "drop")
+
+ggplot(turnout_over_time, aes(x = date_elec, y = avg_turnout)) +
+  geom_line(color = "#ffc403", size = 2) +  
+  geom_point(color = "#c70b1f", size = 3) +  
+  geom_text_repel(aes(label = scales::percent(avg_turnout, accuracy = 0.01)),
+                  size = 3, 
+                  box.padding = 0.5,
+                  segment.color = NA,
+                  color="#c70b1f") +
+  labs(
+    title = "Change in Turnout Rate Over Time",
+    x = "Election Date",
+    y = "Average Turnout Rate"
+  ) +
+  scale_y_continuous(
+    limits = c(0.6, 0.8), 
+    labels = percent_format(scale = 100) 
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+    axis.title = element_text(size = 12)
+  )
 ```
 
+We can observe that there is no clear tendency of turnout rate. However, it is interesting seeing that these two 'snap' elections in 2016 and 2019 were held shortly after the previous elections, with a very brief gap between each one and its predecessor. And the voter turnout in both of these elections was significantly lower compared to the previous ones, suggesting that the nature of such 'emergency' elections may reduce citizens' willingness to vote again.
 
+-------------------
+
+### Q8 : Turnout rate correlated with the municipalities' populations over time
+
+And apart from the election year and specific election context, how are turnout rates correlated with the municipalities' populations within each election year?
+
+```{r,warning = FALSE}
+#| echo: false
+#| results: "show"
+cor_value_overall <- cor(question8$population, question8$turnout_rate)
+lm_model_overall <- lm(turnout_rate ~ log(population), data = question8)
+slope_overall <- coef(lm_model_overall)[2]
+p_value_overall <- summary(lm_model_overall)$coefficients[2, 4]
+
+calculate_slope_and_cor <- function(data) {
+  data <- data %>%
+    mutate(log_population = log(population))
+  cor_value <- cor(data$log_population, data$turnout_rate, use = "complete.obs")
+  lm_model <- lm(turnout_rate ~ log_population, data = data)
+  slope <- coef(lm_model)[2]
+  return(data.frame(cor_value = cor_value, slope = slope))
+}
+
+slope_cor_values <- question8 %>%
+  group_by(date_elec) %>%
+  do(calculate_slope_and_cor(.)) %>%
+  ungroup()
+
+
+ggplot(question8, aes(x = log(population), y = turnout_rate)) +
+  geom_point(color = "#ffc403") +  
+  geom_smooth(method = "lm", color = "#c70b1f", linetype = "dashed") +  
+  facet_wrap(~ date_elec) +
+  geom_text(data = slope_cor_values, 
+            aes(x = max(log(question8$population)), y = max(question8$turnout_rate), 
+                label = paste("r = ", round(cor_value, 2), "\nSlope = ", round(slope, 4))), 
+            color = "#c70b1f", size = 2, hjust = 1, vjust = 1) +
+  theme_minimal() +
+  labs(title = "Correlation between log of Population\nand Turnout rate over time",
+       subtitle= paste("Combining election results from multiple years, \nthe overall correlation is ", round(cor_value_overall, 2),"\nthe overall slope is ", round(slope_overall, 4), "with a p-value ", p_value_overall, "."))+
+   theme(
+    plot.title = element_text(face = "bold", hjust = 0, size = 11),
+    plot.subtitle = element_text(hjust = 0, size = 9, color = "grey40"),
+    axis.title = element_text(size = 10),
+    aspect.ratio = 1.2
+  )
+
+```
 -------------------
 
 ## 9. How has electoral support for smaller parties evolved over time? {visibility="hidden"}
