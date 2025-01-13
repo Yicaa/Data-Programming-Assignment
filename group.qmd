@@ -790,14 +790,12 @@ color_mapping <- c(
   "EAJ-PNV" = "#1B9E77"  
 )
 
-# Calculate the actual voter turnout percentage
 turnout2 <- final_election |> 
   mutate(actual_turnout = (total_votes / population) * 100)
 
 # Determine the low turnout threshold (25th percentile)
 low_turnout_threshold <- quantile(turnout2$actual_turnout, 0.25, na.rm = TRUE)
 
-# Filter data for low turnout regions
 low_turnout_data <- turnout2 |> 
   filter(actual_turnout < low_turnout_threshold)
 
@@ -811,7 +809,6 @@ low_turnout_summary <- low_turnout_data |>
   ungroup() |> 
   mutate(party_code = fct_reorder(party_code, vote_share))
 
-# Plot the vote share by party in low turnout areas
 ggplot(low_turnout_summary, aes(x = party_code, y = vote_share, fill = party_code)) +
   geom_bar(stat = "identity", color = "black", width = 0.7) +
   labs(
@@ -850,7 +847,6 @@ extreme_low_turnout_summary <- extreme_low_turnout_data |>
   ungroup() |> 
   mutate(party_code = fct_reorder(party_code, vote_share))
 
-# Plot the vote share by party in extreme low turnout areas
 ggplot(extreme_low_turnout_summary, aes(x = party_code, y = vote_share, fill = party_code)) +
   geom_bar(stat = "identity", color = "black", width = 0.7) +
   labs(
@@ -876,6 +872,26 @@ Low Turnout Areas (<70.7%): Mainstream parties dominate. PP leads in vote share,
 Extreme Low Turnout Areas (<45%): Regional nationalist parties like EAJ-PNV and EH-BILDU perform strongly, with PSOE overtaking PP. Far-left and far-right parties show limited influence.
 
 Conclusion: Low turnout benefits mainstream parties (PP, PSOE), while extremely low turnout favors regional nationalist parties.
+
+```{r}
+total_extreme_low_votes <- extreme_low_turnout_data |> 
+  group_by(code_community, date_elec) |> 
+  summarise(
+    extreme_low_votes = length(code_community), 
+    .groups = "drop"
+  ) |> 
+  summarise(total_extreme_low_votes = sum(extreme_low_votes)) |> 
+  pull(total_extreme_low_votes)
+total_extreme_low_votes
+
+extreme_low_turnout_data |> 
+  group_by(code_community, date_elec) |> 
+  summarise(extreme_low_votes = length(code_community),.groups = "drop" ) |> 
+  pivot_wider(names_from = date_elec,
+              values_from = extreme_low_votes) 
+```
+
+Basque nationalist parties achieve their highest scores in areas with extremely low voter turnout, which is due to the fact that Pais Vasco (code_community = 14) has the lowest turnout among all regions. A significant portion of this data comes from 2008, a year when an election boycott occurred in the region. Of the 948 instances where municipalities recorded a turnout below 45%, 624 took place during the 2008 election in Pais Vasco.
 
 ### 4. How to analyze the relationship between census and vote? Is it true that certain parties win in rural areas?
 
@@ -949,71 +965,72 @@ SOME IDEAS FOR THE ORIGINAL QUESTIONS TO START?
 -   Which 2 media/pollster outlets had the most polarized estimates of each election?
 
 ### 7. Jacklyn and Linghan
-Do the survey projections of vote shares correspond to those of the actual elections? If there was a deviation, in which parties was it more pronounced?
+How consistent are the survey projections across different election periods? Identify trends or patterns in the prediction biases over time and analyze if certain parties consistently experience higher deviations.
 
 ```{r}
-# Define a function to process election and survey data
-process_election_data <- function(final_election, final_surveys) {
-  # Convert date columns to Date format
-  final_election$date_elec <- as.Date(final_election$date_elec)
-  final_surveys$date_elec <- as.Date(final_surveys$date_elec)
-
-  # Aggregate election data by party and calculate actual vote percentage
-  election_aggregated <- final_election %>%
-    group_by(party_code, party_main) %>%
+# Define a function to analyze prediction trends over time
+analyze_prediction_trends <- function(final_election, final_surveys) {
+final_election$date_elec <- as.Date(final_election$date_elec)
+final_surveys$date_elec <- as.Date(final_surveys$date_elec)
+election_aggregated <- final_election |> 
+    group_by(party_code, party_main, date_elec) |> 
     summarise(
       valid_votes = sum(valid_votes, na.rm = TRUE),
       party_ballots = sum(party_ballots, na.rm = TRUE),
-       .groups = "drop"
+      .groups = "drop"
     ) %>%
     mutate(actual_vote_share = (party_ballots / valid_votes) * 100)
-
-  # Aggregate survey data by party and calculate average predicted vote percentage
-  survey_aggregated <- final_surveys %>%
-    group_by(party_code, party) %>%
+survey_aggregated <- final_surveys |> 
+    group_by(party_code, party, date_elec) |> 
     summarise(predicted_vote_share = mean(votes, na.rm = TRUE),
-               .groups = "drop")
+              .groups = "drop")
 
-  # Merge aggregated election and survey data on party codes
-  merged_data <- merge(election_aggregated, survey_aggregated, by = "party_code")
+merged_trend_data <- merge(election_aggregated, survey_aggregated, 
+                             by = c("party_code", "date_elec"))
 
-  # Calculate Prediction Bias
-  merged_data <- merged_data %>%
+merged_trend_data <- merged_trend_data  |> 
     mutate(prediction_bias = predicted_vote_share - actual_vote_share)
 
-  return(merged_data)
+  return(merged_trend_data)
 }
 
-# Call the function to process the data
-merged_data <- process_election_data(final_election, final_surveys)
-
-# Visualize the results
-merged_data %>%
-  mutate(party_main = fct_reorder(party_main, prediction_bias)) %>% # Reorder parties by bias
-  ggplot(aes(x = party_code, y = prediction_bias, fill = prediction_bias > 0)) +
-  geom_bar(stat = "identity", show.legend = FALSE) +
-  coord_flip() +
+trend_data <- analyze_prediction_trends(final_election, final_surveys)
+trend_data  |> 
+  ggplot(aes(x = date_elec, y = prediction_bias, color = party_code, group = party_code)) +
+  geom_line(size = 1) +
+  geom_point(size = 2) +
   labs(
-    title = "Prediction Bias by Party",
-    x = "Party",
+    title = "Prediction Bias Trends Over Time",
+    subtitle = "Analyzing consistency of survey projections across election periods",
+    x = "Election Date",
     y = "Prediction Bias (%)",
-    fill = "Positive Bias"
+    color = "Party"
   ) +
-  theme_minimal()
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 10, color = "grey40")
+  )
+
 ```
 
-The survey projections of vote shares did not perfectly correspond to the actual election results, as evidenced by the Prediction Bias by Party chart. Prediction bias is the deviation between the survey-predicted vote shares and the actual vote shares observed in the election.
+The analysis of prediction bias trends over time highlights important patterns in the consistency of survey projections across election periods, as shown below:
 
-From the visualization:
-Positive Bias (overestimation):
-The CS party experienced a significant positive bias, meaning that its vote share was overestimated in the surveys compared to the actual election results.
+1.Variation in Prediction Bias Across Parties:
+Certain parties, such as VOX and PODEMOS-IU, show significant fluctuations in prediction bias, with deviations reaching up to ±10%. These fluctuations suggest that survey projections for these parties have been less consistent over time.
+Conversely, major parties such as PP and PSOE exhibit relatively stable prediction biases close to zero, indicating higher reliability in survey projections.
 
-Negative Bias (underestimation):
-Several parties, such as PSOE, PP, and PODEMOS-IU, show a negative bias, indicating that their actual vote shares were underestimated in the surveys.
-The negative bias for PODEMOS-IU appears particularly pronounced, suggesting a substantial underestimation of their support.
+2.Time-Dependent Trends:
+Between 2010 and 2020, biases for VOX and PODEMOS-IU are more pronounced during specific election cycles, such as around 2015 and 2020. This indicates potential methodological challenges during these periods in accurately capturing voter intentions for these parties.
+Parties like CS, ERC, and EAJ-PNV show minimal changes over time, suggesting better alignment between survey projections and election results.
 
-Smaller Bias:
-Certain smaller parties (e.g., ERC, EH-BILDU, and MP) display relatively minor deviations, suggesting better alignment between survey predictions and actual results.
+3.Overestimation vs. Underestimation:
+VOX frequently experiences underestimation in surveys, especially in later years like 2020.
+PODEMOS-IU exhibits consistent overestimation, particularly during elections around 2015 and 2020.
+
+4.Smaller Parties' Challenges:
+Regional or smaller parties, such as BNG, EH-BILDU, and CIU, also demonstrate mild biases but are less volatile compared to newer or emerging parties like VOX.
 
 ### 8. Yijia and Diego
 
