@@ -1466,9 +1466,11 @@ map_data <- spain_map |>
 
 ### Q9
 How has electoral support for smaller parties evolved over time?
-```{r, out.height="80%"}
+```{r, fig.width = 5, fig.height=3}
   
 #| echo: false
+#| out.height: "80%"
+#| out.width: "80%"
 
 # Create the ggplot map
 gg_map <- ggplot(map_data) +
@@ -1513,6 +1515,12 @@ interactive_map <- interactive_map |>
     opts_hover(css = "fill: red")
   )
 
-# Display the interactive map
+# Fix sizing
+interactive_map <- girafe(
+  ggobj = gg_map,
+  width_svg = 7,  # Reduced from 10
+  height_svg = 4  # Reduced from 6
+)
+
 interactive_map
 ```
