@@ -1,118 +1,26 @@
 ---
 title: "Group Task"
 author:
-  - "Marco Boso 100535153"
-  - "Diego Paroli 100554973"
-  - "Yijia Lin 100452242"
-  - "Bradley McKenzie 100535241"
-  - "Linghan Zheng 100540803"
-  - "Jia Lin 100536210"
-  - "Isabel Monge 100542532"
+  - "Marco Boso, Diego Paroli, Yijia Lin, Bradley McKenzie, Linghan Zheng, 
+  Jia Lin, & Isabel Monge"
 format:
-  html:
-    theme: [style.scss]
-    toc: true
-    toc-location: right
-    toc-title: Índice
-    embed-resources: true
+  revealjs:
+    slide-number: "c/t"
+    theme: moon
+    incremental: true
+    width: 1920
+    height: 1080
+editor: visual
+output-file: index.html
 ---
-
-## Objectives and mandatory items
-
-The objective of the delivery is to perform an analysis of the electoral data, carrying out the debugging, summaries and graphs you consider, both of their results and the accuracy of the electoral polls.
-
-Specifically, **you must work only in the time window that includes the elections from 2008 to the last elections of 2019**.
-
-### General comments
-
-In addition to what you see fit to execute, the following items are mandatory:
-
--   Each group should **present before 9th January (23:59) an analysis of the data** in `.qmd` and `.html` format in **Quarto slides** mode, which **will be the ones they will present on the day of the presentation**.
-
--   **Quarto slides should be uploaded to Github** (the link should be provided by a member of each group).
-
--   The **maximum number of slides** should be 40. The **maximum time for each group** will be 20-22 minutes (+5 minutes for questions).
-
--   During the presentation you will **explain (summarised!) the analysis performed** so that **each team member speaks for a similar amount of time** and **each member can be asked about any of the steps**. The grade does not have to be the same for all members.
-
--   It will be valued not only the content but also the container (aesthetics).
-
--   The **objective is to demonstrate that the maximum knowledge of the course has been acquired**: the more content of the syllabus is included, the better.
-
-### Mandatory items:
-
-1.  Data should be **converted to tidydata** where appropriate.
-
-2.  You should **include at least one join** between tables.
-
-3.  Reminder: information = variance, so **remove columns that are not going to contribute anything**.
-
-4.  The **glue and lubridate** packages should be used at some point, as well as the **forcats**. The use of **ggplot2** will be highly valued.
-
-5.  The following should be used at least once:
-
-    -   mutate
-    -   summarise
-    -   group_by (or equivalent)
-    -   case_when
-
-6.  We have many, many parties running for election. **We will only be interested in the following parties**:
-
-    -   PARTIDO SOCIALISTA OBRERO ESPAÑOL (beware: it has/had federations - branches - with some other name).
-    -   PARTIDO POPULAR
-    -   CIUDADANOS (caution: has/had federations - branches - with some other name)
-    -   PARTIDO NACIONALISTA VASCO
-    -   BLOQUE NACIONALISTA GALLEGO
-    -   CONVERGÈNCIA I UNIÓ
-    -   UNIDAS PODEMOS - IU (beware that here they have had various names - IU, podem, ezker batua, ...- and have not always gone together, but here we will analyze them together)
-    -   ESQUERRA REPUBLICANA DE CATALUNYA
-    -   EH - BILDU (are now a coalition of parties formed by Sortu, Eusko Alkartasuna, Aralar, Alternatiba)
-    -   MÁS PAÍS
-    -   VOX
-
-7.  Anything other than any of the above parties should be imputed as "OTHER". Remember to add properly the data after the previous recoding.
-
-8.  Party acronyms will be used for the visualizations. The inclusion of graphics will be highly valued (see <https://r-graph-gallery.com/>).
-
-9.  You must use all 4 data files at some point.
-
-10. You must define at least one (non-trivial) function of your own.
-
-11. You will have to discard mandatory polls that:
-
-```         
--   refer to elections before 2008
--   that are exit polls
--   have a sample size of less than 750 or are unknown
--   that have less than 1 or less fieldwork days
-```
-
-12. You must obligatorily answer the following questions (plus those that you consider analyzing to distinguish yourself from the rest of the teams, either numerically and/or graphically)
-
-```         
--   Which party was the winner in the municipalities with more than 100,000 habitants (census) in each of the elections?
--   Which party was the second when the first was the PSOE? And when the first was the PP?
--   Who benefits from low turnout?
--   How to analyze the relationship between census and vote? Is it true that certain parties win in rural areas?
--   How to calibrate the error of the polls (remember that the polls are voting intentions at national level)?
--   Which polling houses got it right the most and which ones deviated the most from the results?
-```
-
-**You should include at least 3 more "original" questions** that you think that it could be interesting to be answer with the data.
-
-### Marks
-
-**The one who does the most things will not be valued the most**. More is not always better. The **originality** (with respect to the rest of the works, for example in the analyzed or in the subject or ...) of what has been proposed, in the handling of tables (or in the visualization), the **caring** put in the delivery (care in life is important) and the **relevance** of what has been done will be valued. Once you have the mandatory items with your database more or less completed, **think before** chopping code: what could be interesting? What do I need to get a summary both numerical and visual?
-
-Remember that the real goal is to demonstrate a mastery of the tools seen throughout the course. And that happens not only by the quantity of them used but also by the quality when executing them.
-
-**Some dataviz will be extremely positive valued**.
 
 ## Required packages
 
-> Insert in the lower chunk the packages you will need
+We used the following packages for our analysis
 
 ```{r}
+#| echo: true
+
 rm(list = ls())
 library(tidyverse)
 library(dplyr)
@@ -126,19 +34,14 @@ library(forcats)
 library(ggrepel)
 library(scales)
 library(ggpubr)
+library(mapSpain)
+library(sf)
+library(ggiraph)
 ```
 
-## Data
+------------------------------------------------------------------------
 
-The practice will be based on the **electoral data archives** below, compiling data on elections to the Spanish Congress of Deputies from 2008 to the present, as well as surveys, municipalities codes and abbreviations.
-
-```{r}
-# NO TOQUES NADA
-election_data <- read_csv(file = "./data/datos_elecciones_brutos.csv")
-cod_mun <- read_csv(file = "./data/cod_mun.csv")
-surveys <- read_csv(file = "./data/historical_surveys.csv")
-abbrev <- read_csv(file = "./data/siglas.csv")
-```
+## Data Description {visibility="hidden"}
 
 The data will be as follows:
 
@@ -169,9 +72,20 @@ The data will be as follows:
     -   `exit_poll`: whether it is an exit poll or not
     -   `size`: sample size
     -   `turnout`: turnout estimate
-    -   estimated voting intentions for the main parties
+    -   estimated voting intentions for the main parties \## Data
 
-### Cleaning the data -- surveys
+The practice will be based on the **electoral data archives** below, compiling data on elections to the Spanish Congress of Deputies from 2008 to the present, as well as surveys, municipalities codes and abbreviations.
+
+```{r}
+#| echo: false
+# NO TOQUES NADA
+election_data <- read_csv(file = "./data/datos_elecciones_brutos.csv")
+cod_mun <- read_csv(file = "./data/cod_mun.csv")
+surveys <- read_csv(file = "./data/historical_surveys.csv")
+abbrev <- read_csv(file = "./data/siglas.csv")
+```
+
+#### Cleaning the data -- surveys
 
 ```{r cleaning survey df}
 
@@ -257,7 +171,7 @@ final_surveys <- final_surveys |>
 final_surveys
 ```
 
-### Creating table for party codes
+#### Creating table for party codes
 
 Creating a table to link each party name to its unique code
 
@@ -267,7 +181,7 @@ party_info <- final_surveys |>
   unique()
 ```
 
-### Cleaning the data -- election_data
+#### Cleaning the data -- election_data
 
 The election_data file is large and requires quite extensive cleaning to make it "tidy". We will tidy the data to try make it most useful for future analysis. The election data starts off with 48,737 rows and 471 columns. Reducing the number of columns is a clear priority.
 
@@ -468,7 +382,7 @@ turnout <- final_election |>
 turnout
 ```
 
-### Recap cleaning
+#### Recap cleaning
 
 We have 2 primary datasets at this stage, election data and survey data, plus a turnout dataframe which is a subset of the election data. For surveys, the data has been cleaned so each row represents the votes for one party within a specific national poll. For elections, the data has been cleaned so each row represents the number of votes for a party within an election in a specific municipality.
 
@@ -492,16 +406,17 @@ The `turnout` data includes:
 
 -   information on the number of votes and type of vote (e.g. valid or blank/null) per municipality in each election.
 
-**!!!!!!! WORK ON DATAFRAMES final_surveys, final_election, turnout !!!!!!!**\
-**!!!!!!! DO NOT OVERWRITE THESE DATAFRAMES, CREATE NEW ONES IF YOU NEED TO MODIFY THEM (ex. surveys_q1 \<- final_surveys) !!!!!!!**
+---
+# Mandatory questions
 
-## Mandatory questions
+---
 
-### 1.Which party was the winner in the municipalities with more than 100,000 habitants (census) in each of the elections?
+## Q1 {visibility="hidden"}
+Which party was the winner in the municipalities with more than 100,000 habitants (census) in each of the elections?
 
-We create a table `(winning_table)` here that has a column listing each municipality that reported over 100k habitants for at least one election. Then there are columns for each of the elections that report on who won the election and the % of total vote the winning party received. 
+We create a table `(winning_table)` here that has a column listing each municipality that reported over 100k habitants for at least one election. Then there are columns for each of the elections that report on who won the election and the % of total vote the winning party received.
 
-First, explore the data and see that 48 of the 8,135 municipalities had over 100k people. We use code_municipality as some municipalities have the same name. 
+First, explore the data and see that 48 of the 8,135 municipalities had over 100k people. We use code_municipality as some municipalities have the same name.
 
 ```{r}
 # count of provinces to include (for checking)
@@ -529,7 +444,7 @@ winning_table <- winners100k |>
 winning_table
 ```
 
-Some of our winning table, have NA values, we confirm that this is because there code was <100k in some elections and over 100k in others:
+Some of our winning table, have NA values, we confirm that this is because there code was \<100k in some elections and over 100k in others:
 
 ```{r}
 # Check why some have NA's - pull municipality names
@@ -545,8 +460,13 @@ final_election |>
   pivot_wider(names_from = date_elec, 
               values_from = population)
 ```
-Now we will graph the results: 
+---
+
+### Q1
+ANY DESCRIPTION YOU WANT HERE
+
 ```{r}
+#| echo: false
 # Define custom colors for the given party abbreviations
 party_colors <- c(
   "PSOE" = "#EF1C27",       # PARTIDO SOCIALISTA OBRERO ESPAÑOL
@@ -565,13 +485,14 @@ party_colors <- c(
 ```
 
 ```{r}
+#| echo: false
 # Count the number of municipalities each party won in each election
 library(forcats)
 
 party_winners <- winners100k |> 
   group_by(party_code) |> 
   mutate(total_wins = n()) |> 
-  mutate(party_grouped = party_code) |>  # Removed the "Other" condition
+  mutate(party_grouped = party_code) |>  
   ungroup() |> 
   group_by(date_elec, party_grouped) |> 
   summarise(num_municipalities = n(), .groups = "drop")
@@ -599,8 +520,8 @@ ggplot(party_winners, aes(x = party_grouped, y = num_municipalities, fill = part
     strip.text = element_text(size = 12, face = "bold")
   )
 ```
-
-### 2. Which party was the second when the first was the PSOE? And when the first was the PP?
+---
+## 2. Which party was the second when the first was the PSOE? And when the first was the PP? {visibility="hidden"}
 
 #### Identify the First and Second Parties
 
@@ -614,6 +535,7 @@ ranked_parties <- final_election |>
 ```
 
 #### Filter when PSOE is first
+
 ```{r}
 psoe_first <- ranked_parties |> 
   filter(rank == 1 & party_code == "PSOE") |> 
@@ -629,6 +551,7 @@ psoe_first <- ranked_parties |>
 ```
 
 #### Filter when PP is first
+
 ```{r}
 pp_first <- ranked_parties %>%
   filter(rank == 1 & party_code == "PP") %>%  
@@ -643,7 +566,8 @@ pp_first <- ranked_parties %>%
   select(date_elec, code_municipality, population, first_party, first_votes, second_party, second_votes)
 ```
 
-#### Summarized PSOE first 
+#### Summarized PSOE first
+
 ```{r}
 psoe_summary <- psoe_first %>%
   group_by(date_elec, second_party) %>%
@@ -663,9 +587,11 @@ psoe_summary_per_year <- psoe_first %>%
   print()
   
 ```
+
 PP was the second party when PSOE was the winner in all the elections.
 
-#### Summarized PP first 
+#### Summarized PP first
+
 ```{r}
 pp_summary <- pp_first %>%
   group_by(date_elec, second_party) %>%
@@ -685,10 +611,15 @@ pp_summary_per_year <- pp_first %>%
   print()
   
 ```
-PSOE was the second party when PP was the winner in almost every election. PODEMOS-IU was the second party in the elections of 2015 and 2016 after PP.
 
-#### Vis PSOE first 
+PSOE was the second party when PP was the winner in almost every election. PODEMOS-IU was the second party in the elections of 2015 and 2016 after PP.
+---
+### Q2
+ANY TEXT YOU WANT
+
 ```{r}
+#|echo: false
+
 ggplot(psoe_first, aes(y = reorder(date_elec, desc(date_elec)), 
                      x = second_votes, fill = second_party)) +
   
@@ -708,7 +639,9 @@ ggplot(psoe_first, aes(y = reorder(date_elec, desc(date_elec)),
     panel.grid.major.y = element_line(color = "gray", linetype = "dashed", size = 0.3)
   ) 
 ```
+
 #### Second most voted party by population when the first id PSOE
+
 ```{r}
 # Step 1: Create population categories with ordered factors
 psoe_first <- psoe_first %>%
@@ -781,7 +714,8 @@ for (date in unique_dates) {
 
 ```
 
-#### Vis PP first 
+#### Vis PP first
+
 ```{r}
 ggplot(pp_first, aes(y = reorder(date_elec, desc(date_elec)), 
                      x = second_votes, fill = second_party)) +
@@ -802,7 +736,9 @@ ggplot(pp_first, aes(y = reorder(date_elec, desc(date_elec)),
     panel.grid.major.y = element_line(color = "gray", linetype = "dashed", size = 0.3)
   ) 
 ```
+
 #### Second most voted party by population when the first id PSOE
+
 ```{r}
 # Step 1: Create population categories with ordered factors for PP
 pp_first <- pp_first %>%
@@ -928,7 +864,9 @@ plot_2019 <- ggplot(data_filtered_2019, aes(x = population_category,
 print(plot_2019)
 ```
 
-### 3. Who benefits from low turnout?
+------------------------------------------------------------------------
+
+## 3. Who benefits from low turnout? {visibility="hidden"}
 
 ```{r}
 library(ggplot2)
@@ -1046,7 +984,17 @@ extreme_low_turnout_data |>
               values_from = extreme_low_votes) 
 ```
 
-### 4. How to analyze the relationship between census and vote? Is it true that certain parties win in rural areas?
+------------------------------------------------------------------------
+
+### Q3
+```{r}
+
+```
+
+
+-------------------
+
+## 4. How to analyze the relationship between census and vote? Is it true that certain parties win in rural areas? {visibility="hidden"}
 
 ```{r}
 #Less than 10,000 are rural constituencies and more than or equal to 10,000 are urban constituencies: 
@@ -1108,7 +1056,13 @@ extreme_low_turnout_data |>
   summary(anova_model) 
 ```
 
-### 5. How to calibrate the error of the polls (remember that the polls are voting intentions at national level)?
+-------------------
+
+### Q4
+
+-------------------
+
+## 5. How to calibrate the error of the polls (remember that the polls are voting intentions at national level)? {visibility="hidden"}
 
 ```{r}
 survey_q5 <- final_surveys |> 
@@ -1141,6 +1095,17 @@ final_q5 <- survey_q5 |>
 polling_err <- final_q5 |> 
   summarise(avg_err = mean(polling_error), .by = party_code)
 
+
+```
+
+Bigger party might be subject to bigger errors because they are voted by more people (ex. PNV cannot be over/underestimated by several percentage points as it only receives 1% of votes)
+
+-------------------
+
+### Q5
+text here
+```{r}
+#| echo: false
 ggplot(polling_err, aes(x = reorder(party_code, avg_err), y = avg_err, fill = factor(party_code))) +
   geom_bar(stat = "identity") +  
   scale_fill_manual(values = party_colors) +
@@ -1165,19 +1130,20 @@ ggplot(polling_err, aes(x = reorder(party_code, avg_err), y = avg_err, fill = fa
   guides(fill = guide_legend(title = "Political Party"))
 ```
 
-### 6. Which polling houses got it right the most and which ones deviated the most from the results?
 
-Before starting with this question, it's interesting to discuss how to measure the goodness of prediction of one pollsters. 
+-------------------
 
-In our view, this perspective is somewhat narrow if it is only based on accurately predicting the winning party (or the one with the most votes) in each case:  studies in this assignment have found that there have been a number of recent instances in Spain where large parties with more votes have not been able to form an independent government, and that large political parties have often needed to collaborate with smaller parties.
+## 6. Which polling houses got it right the most and which ones deviated the most from the results? {visibility="hidden"}
+
+Before starting with this question, it's interesting to discuss how to measure the goodness of prediction of one pollsters.
+
+In our view, this perspective is somewhat narrow if it is only based on accurately predicting the winning party (or the one with the most votes) in each case: studies in this assignment have found that there have been a number of recent instances in Spain where large parties with more votes have not been able to form an independent government, and that large political parties have often needed to collaborate with smaller parties.
 
 However, it is also inappropriate to consider predictions of results for all parties (hundreds) as equally important, as many small parties end up not even getting a single parliamentary seat.
 
-Therefore, our measure in this question is to divide the parties into two parts:
-Assign a weight of 0.7 to the top five parties receiving the most votes in each general election, and a weight of 0.3 to the remaining parties.
+Therefore, our measure in this question is to divide the parties into two parts: Assign a weight of 0.7 to the top five parties receiving the most votes in each general election, and a weight of 0.3 to the remaining parties.
 
 In this way, the top five parties with the most votes get more weight than the other small parties, but we do not exclude the small parties completely from our accuracy assessment.
-
 
 Haven defined the criteria, firstly, we will summarise the prediction of each pollster for each party in each of these elections, as well as the party ballots rate in every election. Then, we join these two tables with the key `date_elec_party_code` for later calculation.
 
@@ -1240,7 +1206,10 @@ head(wmae$pollster[order(wmae$WMAE)], 5)
 tail(wmae$pollster[order(wmae$WMAE)], 5)
 ```
 
-Here we will visualize the performance of these pollsters:
+-------------------
+
+### Q6
+text here
 
 ```{r WMAE,warning = FALSE}
 ggplot(wmae, aes(x = pollster, y = WMAE, fill = WMAE)) +
@@ -1265,10 +1234,13 @@ ggplot(wmae, aes(x = pollster, y = WMAE, fill = WMAE)) +
 
 ```
 
+-------------------
 
-## Additional questions
+# Exploratory questions
 
-### 7. How consistent are the survey projections across different election periods? Identify trends or patterns in the prediction biases over time and analyze if certain parties consistently experience higher deviations.
+------------------------------------------------------------------------
+
+## 7. How consistent are the survey projections across different election periods? Identify trends or patterns in the prediction biases over time and analyze if certain parties consistently experience higher deviations. {visibility="hidden"}
 
 ```{r}
 # Define a function to analyze prediction trends over time
@@ -1296,7 +1268,13 @@ merged_trend_data <- merged_trend_data  |>
 
   return(merged_trend_data)
 }
+```
 
+-------------------
+
+### Q7
+text here
+```{r}
 trend_data <- analyze_prediction_trends(final_election, final_surveys)
 trend_data  |> 
   ggplot(aes(x = date_elec, y = prediction_bias, color = party_code, group = party_code)) +
@@ -1315,9 +1293,13 @@ trend_data  |>
     plot.title = element_text(size = 14, face = "bold"),
     plot.subtitle = element_text(size = 10, color = "grey40")
   )
+
 ```
 
-### 8. How has the turnout rate changed over time? And within each election year, how are turnout rates correlated with the municipalities' populations?
+
+-------------------
+
+## 8. How has the turnout rate changed over time? And within each election year, how are turnout rates correlated with the municipalities' populations? {visibility="hidden"}
 
 ```{r}
 question8<- final_election |> 
@@ -1415,11 +1397,22 @@ The slope -0.01 can be interpreted in this way: If the population doubles, the t
 1.  The nature of "snap" elections like in 2016 and 2019, as a result of the inability of any party to secure an absolute majority, may reduce citizens' willingness to vote again.
 2.  The population size has a negative effect on turnout rate: if the population doubles, the turnout rate in this municipality will decrease by approximately 0.69%.
 
-### 9. How has electoral support for smaller parties evolved over time?
+-------------------
+
+### Q8
+text here
+```{r}
+
+```
+
+
+-------------------
+
+## 9. How has electoral support for smaller parties evolved over time? {visibility="hidden"}
 
 The maps show a significant increase in support for smaller parties over time by autonomous community, with darker regions indicating higher percentages. Madrid, for example, rises from around 10% in 2008 to a peak of 54% in April 2019. Northern communities including Catalonia, Navarra, and the Basque Country consistently show high levels of support for small parties.
 
-The April 2019 election marked the height of support for smaller parties overall, but the November 2019 election, a re-vote triggered by the failure to form a majority coalition, shows a slight decline in their support, as reflected in the lighter shading across many regions. 
+The April 2019 election marked the height of support for smaller parties overall, but the November 2019 election, a re-vote triggered by the failure to form a majority coalition, shows a slight decline in their support, as reflected in the lighter shading across many regions.
 
 ```{r small-parties}
 # Load necessary libraries
@@ -1467,6 +1460,16 @@ map_data <- spain_map |>
   left_join(party_percentage, by = "codauto") |> 
   drop_na(date_elec)
 
+```
+
+-------------------
+
+### Q9
+How has electoral support for smaller parties evolved over time?
+```{r, out.height="80%"}
+  
+#| echo: false
+
 # Create the ggplot map
 gg_map <- ggplot(map_data) +
   geom_sf_interactive(
@@ -1503,7 +1506,7 @@ interactive_map <- girafe(
   height_svg = 6
 )
 
-# Optional: Adjust tooltip style
+# Adjust tooltip style
 interactive_map <- interactive_map |> 
   girafe_options(
     opts_tooltip(css = "background-color: white; color: black; border: 1px solid black; padding: 5px;"),
@@ -1512,6 +1515,4 @@ interactive_map <- interactive_map |>
 
 # Display the interactive map
 interactive_map
-
 ```
-
