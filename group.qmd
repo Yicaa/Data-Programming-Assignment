@@ -586,10 +586,18 @@ ggplot(polling_err, aes(x = reorder(party_code, avg_err), y = avg_err, fill = fa
 #Bigger party might be subject to bigger errors because they are voted by more people (ex. PNV cannot be over/underestimated by several percentage points as it only receives 1% of votes)
 # Should we rescale the analysis??
 
-# Either plot avg polling error by party or dynamically by party and election
-# Plot polling error vs turnout/turnout difference?
+
+# Plot polling error vs turnout/turnout difference? --> useless
+# turnout_analysis <- final_q5 |> 
+#   reframe(turnout_diff = unique(avg_turnout)- unique(turnout), 
+#           polling_diff = mean(polling_error),
+#           .by = date_elec)
+# ggplot(turnout_analysis, aes(x=turnout_diff, y=polling_diff))+
+#   geom_point()
+# 
 
 
+# Plot avg polling error dynamically by party and election
 ```
 
 ### 6. Which polling houses got it right the most and which ones deviated the most from the results?
