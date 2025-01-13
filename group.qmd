@@ -493,8 +493,51 @@ The `turnout` data includes:
 
 ### 1.Which party was the winner in the municipalities with more than 100,000 habitants (census) in each of the elections?
 
-```{r}
+We create a table `(winning_table)` here that has a column listing each municipality that reported over 100k habitants for at least one election. Then there are columns for each of the elections that report on who won the election and the % of total vote the winning party received. 
 
+First, explore the data and see that 48 of the 8,135 municipalities had over 100k people. We use code_municipality as some municipalities have the same name. 
+
+```{r}
+# count of provinces to include (for checking)
+final_election |> 
+  filter(population >100000) |> 
+  summarise(num_100k = length(unique(code_municipality))) # we have 48 municipalities 
+
+# create table to identify winning party only in provinces >100k
+winners100k <- final_election |> 
+  filter(population > 100000) |> 
+  group_by(date_elec, code_municipality, municipality) |> 
+  mutate(vote_percent = as.character(glue("{party_main} ({round(party_ballots/valid_votes*100, 1)}%)"))) |> # create name + vote% value. 
+  slice_max(order_by = party_ballots, n = 1) |> #select winner only
+  ungroup() |> 
+  select(date_elec, code_municipality, municipality, population, party_main, party_code, valid_votes, party_ballots, vote_percent)
+
+
+# Pivot to create summary table of only the municipality, winner and vote getting %
+winning_table <- winners100k |> 
+  select(municipality, date_elec, vote_percent) |> 
+  pivot_wider(names_from = date_elec, 
+              values_from = vote_percent)
+
+# print output
+winning_table
+```
+
+Some of our winning table, have NA values, we confirm that this is because there code was <100k in some elections and over 100k in others:
+
+```{r}
+# Check why some have NA's - pull municipality names
+varying_pop_municips <- winning_table |>
+  filter_all(any_vars(is.na(.))) |>
+  pull(municipality)
+
+# filter for those municipalities to show the population varies +/- 100k
+final_election |> 
+  filter(municipality %in% varying_pop_municips) |> 
+  group_by(municipality, date_elec, population) |> 
+  summarise() |> 
+  pivot_wider(names_from = date_elec, 
+              values_from = population)
 ```
 
 ### 2. Which party was the second when the first was the PSOE? And when the first was the PP?
