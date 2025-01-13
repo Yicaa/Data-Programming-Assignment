@@ -561,7 +561,7 @@ The maps show a significant increase in support for smaller parties over time by
 
 The April 2019 election marked the height of support for smaller parties overall, but the November 2019 election, a re-vote triggered by the failure to form a majority coalition, shows a slight decline in their support, as reflected in the lighter shading across many regions. 
 
-```{r}
+```{r small-parties}
 # Load necessary libraries
 library(mapSpain)
 library(sf)
@@ -569,31 +569,53 @@ library(ggplot2)
 library(dplyr)
 library(ggiraph)
 
-spain_map <- esp_get_ccaa()
+# Calculate % (PSOE + PP) and % other parties for each community and date
+party_percentage <- final_election |> 
+  group_by(code_community, date_elec) |> 
+  summarize(
+    total_votes = sum(party_ballots, na.rm = TRUE),
+    PSOE_PP_votes = sum(party_ballots[party_code %in% c("PSOE", "PP")], na.rm = TRUE),
+    other_votes = total_votes - PSOE_PP_votes
+  ) |> 
+  mutate(
+    PSOE_PP_percent = (PSOE_PP_votes / total_votes) * 100,
+    other_percent = (other_votes / total_votes) * 100
+  ) |> 
+  ungroup()
 
+# Get map and simplify geometry
+spain_map <- esp_get_ccaa() |> 
+  st_simplify(dTolerance = 0.01)
+
+# Community mapping with names
 community_map <- tibble(
   code_community = c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17"),
-  codauto = c("01", "02", "03", "04", "05", "06", "08", "07", "09", "11", "12", "13", "15", "16", "14", "17", "10")
+  codauto = c("01", "02", "03", "04", "05", "06", "08", "07", "09", "11", "12", "13", "15", "16", "14", "17", "10"),
+  community_name = c(
+    "Andalusia", "Aragon", "Asturias", "Balearic Islands", "Canary Islands", "Cantabria",
+    "Castile and Leon", "Castile-La Mancha", "Catalonia", "Extremadura", "Galicia",
+    "Madrid", "Navarra", "Basque Country", "Murcia", "La Rioja", "Valencia"
+  )
 )
 
-# Add codauto to your electoral data
-party_percentage_long <- party_percentage_long |> 
+# Add codauto and community names to your electoral data
+party_percentage <- party_percentage |> 
   left_join(community_map, by = "code_community")
 
 # Merge spatial data with electoral data using codauto
 map_data <- spain_map |> 
-  left_join(party_percentage_long, by = "codauto") |> 
+  left_join(party_percentage, by = "codauto") |> 
   drop_na(date_elec)
 
 # Create the ggplot map
 gg_map <- ggplot(map_data) +
   geom_sf_interactive(
     aes(
-      fill = percent,
+      fill = other_percent, # Correct fill variable
       geometry = geometry,
       tooltip = paste(
         "Region: ", community_name,
-        "<br>% Other Votes: ", round(percent, 2), "%"
+        "<br>% Other Votes: ", round(other_percent, 2), "%"
       ),
       data_id = codauto
     ),
@@ -632,3 +654,4 @@ interactive_map <- interactive_map |>
 interactive_map
 
 ```
+
