@@ -712,13 +712,16 @@ for (date in unique_dates) {
 ```
 
 #### Vis PP first
+---
+### Q2: Primary Runner-Up Parties to PSOE and PP in Elections
+Since the code for analyzing the case when the PSOE is the first party is essentially the same as when the PP is first, I’ve decided to focus on presenting only the PP case.
 
 ```{r}
 ggplot(pp_first, aes(y = reorder(date_elec, desc(date_elec)), 
                      x = second_votes, fill = second_party)) +
   
   geom_bar(stat = "identity", position = "identity", width = 0.7) +
-  scale_fill_manual(values = c("PSOE" = "#f20400", "PODEMOS-IU" = "#663278", "VOX" = "#5AB531", "CS" = "#EB6109")) +
+  scale_fill_manual(values = party_colors) +
   scale_x_continuous(labels = scales::comma) + 
   theme_minimal() +
   labs(x="", y="", title= "Second party when the winner is PP", subtitle = "total n of votes per election") +
@@ -733,6 +736,7 @@ ggplot(pp_first, aes(y = reorder(date_elec, desc(date_elec)),
     panel.grid.major.y = element_line(color = "gray", linetype = "dashed", size = 0.3)
   ) 
 ```
+-------------------------------------------------
 
 #### Second most voted party by population when the first id PSOE
 
@@ -812,7 +816,7 @@ for (date in unique_dates_pp) {
 
 ---
 ### Q2 : Primary Runner-Up Parties to PSOE and PP in Elections
-ANY TEXT YOU WANT
+The original code uses a loop to analyze the second-party votes across all elections, breaking down the results by the size of the cities (in terms of population) where people voted. 
 
 ```{r}
 pp_first <- pp_first |> 
