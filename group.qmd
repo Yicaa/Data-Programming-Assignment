@@ -466,7 +466,7 @@ final_election |>
 ANY DESCRIPTION YOU WANT HERE
 
 ```{r}
-#| echo: false
+#| echo: false 
 # Define custom colors for the given party abbreviations
 party_colors <- c(
   "PSOE" = "#EF1C27",       # PARTIDO SOCIALISTA OBRERO ESPAÑOL
