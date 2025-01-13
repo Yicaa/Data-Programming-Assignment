@@ -526,9 +526,103 @@ The `turnout` data includes:
 
 ### 6. Which polling houses got it right the most and which ones deviated the most from the results?
 
+Before starting with this question, it's interesting to discuss how to measure the goodness of prediction of one pollsters. 
+
+In our view, this perspective is somewhat narrow if it is only based on accurately predicting the winning party (or the one with the most votes) in each case:  studies in this assignment have found that there have been a number of recent instances in Spain where large parties with more votes have not been able to form an independent government, and that large political parties have often needed to collaborate with smaller parties.
+
+However, it is also inappropriate to consider predictions of results for all parties (hundreds) as equally important, as many small parties end up not even getting a single parliamentary seat.
+
+Therefore, our measure in this question is to divide the parties into two parts:
+Assign a weight of 0.7 to the top five parties receiving the most votes in each general election, and a weight of 0.3 to the remaining parties.
+
+In this way, the top five parties with the most votes get more weight than the other small parties, but we do not exclude the small parties completely from our accuracy assessment.
+
+
+Haven defined the criteria, firstly, we will summarise the prediction of each pollster for each party in each of these elections, as well as the party ballots rate in every election. Then, we join these two tables with the key `date_elec_party_code` for later calculation.
+
 ```{r}
+pollster_estimate <- final_surveys |> 
+  select(date_elec, pollster, party_code, votes) |> 
+  mutate(date_elec_party_code = paste(date_elec, party_code, sep = "_")) |> 
+  select(date_elec_party_code, pollster, votes)
+
+final_election_summary <- final_election |> 
+  group_by(date_elec, party_code) |> 
+  reframe(sum_ballots = sum(party_ballots)) 
+
+total_votes_summary<- final_election |> 
+  dplyr::select(-party_main, -party_code, -party_ballots) |> 
+  distinct() |> 
+  group_by(date_elec) |> 
+  summarise(sum_total_votes=sum(total_votes))
+
+final_election_summary<- final_election_summary |> 
+  left_join(total_votes_summary, by=c("date_elec"="date_elec")) |> 
+  mutate(national_share = sum_ballots/sum_total_votes) |> 
+  mutate(date_elec_party_code = paste(date_elec, party_code, sep = "_")) |> 
+  left_join(pollster_estimate, by=c("date_elec_party_code"="date_elec_party_code")) |> 
+  dplyr::select(-date_elec_party_code) 
+```
+
+Now we will calculate the absolute error of pollsters predictions comparing with real result, assigning weight of 0.7 to the first 5 large parties in each election, and 0.3 to the remaining parties.
+
+```{r}
+final_election_summary_v2 <- final_election_summary |> 
+  group_by(date_elec) |>  
+  arrange(date_elec, desc(national_share)) |>  
+  mutate(rank_pos = dense_rank(-national_share)) |>  
+  mutate(weight = if_else(rank_pos <= 5, 0.7, 0.3)) |>  
+  ungroup()  
+```
+
+Then, we can now calculate the weighted MAE of each pollster:
+
+```{r}
+final_election_summary_v3 <- final_election_summary_v2 |> 
+  mutate(national_share=national_share*100) |> 
+  mutate(error = abs(votes - national_share)) 
+  
+wmae <- final_election_summary_v3 |> 
+  group_by(pollster) |> 
+  summarise(WMAE = sum(weight * error) / sum(weight)) |> 
+  ungroup()
+```
+
+We can obtain the 5 pollsters that predict the best and the 5 that predict the worst.
+
+```{r}
+head(wmae$pollster[order(wmae$WMAE)], 5)
+```
+
+```{r}
+tail(wmae$pollster[order(wmae$WMAE)], 5)
+```
+
+Here we will visualize the performance of these pollsters:
+
+```{r WMAE,warning = FALSE}
+ggplot(wmae, aes(x = reorder(pollster, WMAE), y = WMAE, fill = WMAE)) +
+  geom_col() +  
+  theme_minimal(base_size = 10) +
+  theme(
+    panel.grid.major = element_line(color = "grey80", size = 0.5),  
+    panel.grid.minor = element_blank(), 
+    axis.text.x = element_text(angle = 65, hjust = 1, size = 8),
+    plot.title = element_text(face = "bold", size = 14),
+    plot.subtitle = element_text(face = "bold", size = 12),
+    axis.title.y = element_text(face = "bold", size = 10)
+  ) +
+  labs(
+    title = "Weighted Average Polling Error by Pollster",
+    subtitle = "Comparison of polling errors across different organizations",
+    x = NULL,
+    y = "Weighted Average Error"
+  ) +
+  scale_y_continuous(labels = scales::comma) +
+  scale_fill_gradient2(low = "green", mid = "#ffc403", high = "#c70b1f", midpoint = 3.2) 
 
 ```
+
 
 ## Additional questions
 
@@ -555,6 +649,7 @@ SOME IDEAS FOR THE ORIGINAL QUESTIONS TO START?
 ### 8. Yijia and Diego
 
 How has the turnout rate changed over time? And within each election year, how are turnout rates correlated with the municipalities' populations?
+
 ```{r}
 question8<- final_election |> 
   group_by(date_elec,municipality) |> 
@@ -570,6 +665,7 @@ turnout_over_time <- question8 |>
   summarize(avg_turnout = (sum(total_votes) / sum(population)),
                            na.rm = TRUE, 
                            .groups = "drop")
+
 ggplot(turnout_over_time, aes(x = date_elec, y = avg_turnout)) +
   geom_line(color = "#ffc403", size = 2) +  
   geom_point(color = "#c70b1f", size = 3) +  
@@ -596,7 +692,7 @@ ggplot(turnout_over_time, aes(x = date_elec, y = avg_turnout)) +
 
 We can observe that there is no clear tendency of turnout rate. However, it is interesting seeing that these two 'snap' elections in 2016 and 2019 were held shortly after the previous elections, with a very brief gap between each one and its predecessor. Both elections were triggered by the inability of any party to secure an absolute majority, leading to the call for a second 'emergency' election. However, the voter turnout in both of these elections was significantly lower compared to the previous ones, suggesting that the nature of such snap elections may reduce citizens' willingness to vote again.
 
-And apart from the election year and specific election context, how are turnout rates correlated with the municipalities' populations within each election year? 
+And apart from the election year and specific election context, how are turnout rates correlated with the municipalities' populations within each election year?
 
 Since the population of municipalities ranges from very small to extremely large, with some major cities having populations hundreds of times greater than small villages, we will apply a logarithmic transformation to the population for a more effective regression analysis.
 
@@ -647,8 +743,8 @@ The slope -0.01 can be interpreted in this way: If the population doubles, the t
 
 **In conclusion, although there is no clear tendency of turnout rate evolution over time, we do observe two important insights:**
 
-1. The nature of "snap" elections like in 2016 and 2019, as a result of the inability of any party to secure an absolute majority, may reduce citizens' willingness to vote again.
-2. The population size has a negative effect on turnout rate: if the population doubles, the turnout rate in this municipality will decrease by approximately 0.69%.
+1.  The nature of "snap" elections like in 2016 and 2019, as a result of the inability of any party to secure an absolute majority, may reduce citizens' willingness to vote again.
+2.  The population size has a negative effect on turnout rate: if the population doubles, the turnout rate in this municipality will decrease by approximately 0.69%.
 
 
 ### 7. Marco, Isabel, Brad
