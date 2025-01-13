@@ -11,6 +11,7 @@ format:
     width: 1920
     height: 1080
 editor: visual
+output-file: index.html
 ---
 
 ## Required packages
@@ -18,6 +19,8 @@ editor: visual
 We used the following packages for our analysis
 
 ```{r}
+#| echo: true
+
 rm(list = ls())
 library(tidyverse)
 library(dplyr)
@@ -403,10 +406,7 @@ The `turnout` data includes:
 
 -   information on the number of votes and type of vote (e.g. valid or blank/null) per municipality in each election.
 
-**!!!!!!! WORK ON DATAFRAMES final_surveys, final_election, turnout !!!!!!!**\
-**!!!!!!! DO NOT OVERWRITE THESE DATAFRAMES, CREATE NEW ONES IF YOU NEED TO MODIFY THEM (ex. surveys_q1 \<- final_surveys) !!!!!!!**
 ---
-
 # Mandatory questions
 
 ---
@@ -492,7 +492,7 @@ library(forcats)
 party_winners <- winners100k |> 
   group_by(party_code) |> 
   mutate(total_wins = n()) |> 
-  mutate(party_grouped = party_code) |>  # Removed the "Other" condition
+  mutate(party_grouped = party_code) |>  
   ungroup() |> 
   group_by(date_elec, party_grouped) |> 
   summarise(num_municipalities = n(), .groups = "drop")
@@ -864,7 +864,9 @@ plot_2019 <- ggplot(data_filtered_2019, aes(x = population_category,
 print(plot_2019)
 ```
 
-### 3. Who benefits from low turnout?
+------------------------------------------------------------------------
+
+## 3. Who benefits from low turnout? {visibility="hidden"}
 
 ```{r}
 library(ggplot2)
@@ -981,6 +983,8 @@ extreme_low_turnout_data |>
   pivot_wider(names_from = date_elec,
               values_from = extreme_low_votes) 
 ```
+
+------------------------------------------------------------------------
 
 ### Q3
 ```{r}
@@ -1178,7 +1182,9 @@ ggplot(wmae, aes(x = pollster, y = WMAE, fill = WMAE)) +
 
 # Exploratory questions
 
-### 7. How consistent are the survey projections across different election periods? Identify trends or patterns in the prediction biases over time and analyze if certain parties consistently experience higher deviations.
+------------------------------------------------------------------------
+
+## 7. How consistent are the survey projections across different election periods? Identify trends or patterns in the prediction biases over time and analyze if certain parties consistently experience higher deviations. {visibility="hidden"}
 
 ```{r}
 # Define a function to analyze prediction trends over time
@@ -1206,7 +1212,13 @@ merged_trend_data <- merged_trend_data  |>
 
   return(merged_trend_data)
 }
+```
 
+-------------------
+
+### Q7
+text here
+```{r}
 trend_data <- analyze_prediction_trends(final_election, final_surveys)
 trend_data  |> 
   ggplot(aes(x = date_elec, y = prediction_bias, color = party_code, group = party_code)) +
@@ -1225,13 +1237,6 @@ trend_data  |>
     plot.title = element_text(size = 14, face = "bold"),
     plot.subtitle = element_text(size = 10, color = "grey40")
   )
-```
-
--------------------
-
-### Q7
-text here
-```{r}
 
 ```
 
@@ -1405,7 +1410,8 @@ map_data <- spain_map |>
 
 ### Q9
 How has electoral support for smaller parties evolved over time?
-```{r}
+```{r, out.height="80%"}
+  
 #| echo: false
 
 # Create the ggplot map
@@ -1454,4 +1460,3 @@ interactive_map <- interactive_map |>
 # Display the interactive map
 interactive_map
 ```
-
