@@ -560,9 +560,9 @@ custom_colors <- c("PSOE" = "#f20400", "PP" = "blue", "PODEMOS-IU" = "#663278",
                    "CIU" = "darkblue", "BNG" = "lightgreen", "EH-BILDU" = "#0157a1",
                    "OTHER" = "black", "ERC" = "yellow", "EAJ-PNV" = "pink")
 
-ggplot(polling_err, aes(x = reorder(party_code, avg_err), y = avg_err, color = factor(party_code))) +
-  geom_point(size = 3) +  
-  scale_color_manual(values = custom_colors) +
+ggplot(polling_err, aes(x = reorder(party_code, avg_err), y = avg_err, fill = factor(party_code))) +
+  geom_bar(stat = "identity") +  
+  scale_fill_manual(values = custom_colors) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
   labs(
     title = "Polling Error by Political Party",
