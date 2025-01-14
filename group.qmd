@@ -529,7 +529,9 @@ ggplot(party_winners, aes(x = party_grouped, y = num_municipalities, fill = part
     strip.text = element_text(size = 12, face = "bold")
   )
 ```
+
 ---
+
 ## 2. Which party was the second when the first was the PSOE? And when the first was the PP? {visibility="hidden"}
 
 #### Identify the First and Second Parties
@@ -798,14 +800,13 @@ plot_2019 <- ggplot(data_filtered_2019, aes(x = population_category,
 print(plot_2019)
 ```
 
-#### Second most voted party by population when the first is PSOE
-
 ---
 
 ### Q2 : Primary Runner-Up Parties to PSOE and PP in Elections
 
 ```{r}
 #| echo: true
+#| eval: false
 # Step 1: Create population categories with ordered factors for PP
 pp_first <- pp_first |> 
   mutate(
@@ -873,6 +874,8 @@ for (date in unique_dates_pp) {
   print(plots_pp[[as.character(as.Date(date))]])
 }
 ```
+
+---
 
 ## 3. Who benefits from low turnout? {visibility="hidden"}
 
@@ -1459,9 +1462,6 @@ ggplot(wmae, aes(x = pollster, y = WMAE, fill = WMAE)) +
   scale_fill_gradient2(low = "green", mid = "#ffc403", high = "#c70b1f", midpoint = 1.8) 
 
 ```
-
-
-# Exploratory questions
 
 ---
 
