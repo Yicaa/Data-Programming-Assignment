@@ -499,7 +499,7 @@ party_colors <- c(
   "CIU" = "#FFB232",        # CONVERGÈNCIA I UNIÓ
   "EH-BILDU" = "#A6CE39",   # EH - BILDU
   "MP" = "#0CDCC3",         # MÁS PAÍS
-  "Other" = "#808080"       # Other parties
+  "OTHER" = "#808080"       # Other parties
 )
 ```
 
@@ -1189,8 +1189,6 @@ final_q5 <- survey_q5 |>
 
 polling_err <- final_q5 |> 
   summarise(avg_err = mean(polling_error), .by = party_code)
-
-
 ```
 
 Bigger party might be subject to bigger errors because they are voted by more people (ex. PNV cannot be over/underestimated by several percentage points as it only receives 1% of votes)
@@ -1198,7 +1196,7 @@ Bigger party might be subject to bigger errors because they are voted by more pe
 -------------------
 
 ### Q5 : Polling error
-text here
+Are some parties consistently underestimated or overestimated by surveys?
 ```{r}
 #| echo: false
 ggplot(polling_err, aes(x = reorder(party_code, avg_err), y = avg_err, fill = factor(party_code))) +
@@ -1225,6 +1223,60 @@ ggplot(polling_err, aes(x = reorder(party_code, avg_err), y = avg_err, fill = fa
   guides(fill = guide_legend(title = "Political Party"))
 ```
 
+-------------------
+
+### Q5 : Polling error vs days before election
+
+```{r}
+surveys_date <- final_surveys |> 
+  left_join(election_q5, by = join_by(date_elec, party_code)) |> 
+  select(date_elec, id_pollster, media, field_date_from, field_date_to, size, party_code, votes, share_votes) |> 
+  rename(voting_intention = votes, actual_votes = share_votes)
+
+survey_mae <- surveys_date |> 
+  mutate(abs_error = abs(voting_intention - actual_votes)) |>
+  group_by(id_pollster, date_elec, media, field_date_from, field_date_to, size) |>
+  summarise(mae = mean(abs_error), .groups = "drop") |> 
+  mutate(days_to_election = as.numeric(difftime(date_elec, field_date_to, units = "days")))
+
+ggplot(survey_mae, aes(x = days_to_election, y = mae)) +
+  geom_point(color = "black", alpha = 1) + 
+  geom_smooth(method = "lm", se = TRUE, color = "red") + 
+  labs(
+    title = "Scatterplot of MAE vs Days To Election",
+    x = "Number of days until election",
+    y = "Mean Absolute Error (MAE)"
+  ) +
+  scale_x_reverse() +
+  theme_minimal()
+```
+
+-------------------
+
+### Q5 : Polling error vs surveys size
+
+```{r}
+surveys_100 <- final_surveys |> 
+  filter(abs(as.numeric(difftime(date_elec, field_date_from, units = "days"))) <= 60) |> 
+  left_join(election_q5, by = join_by(date_elec, party_code)) |> 
+  select(date_elec, id_pollster, media, field_date_from, field_date_to, size, party_code, votes, share_votes) |> 
+  rename(voting_intention = votes, actual_votes = share_votes)
+
+survey_mae <- surveys_100 |> 
+  mutate(abs_error = abs(voting_intention - actual_votes)) |>
+  group_by(id_pollster, date_elec, media, field_date_from, field_date_to, size) |>
+  summarise(mae = mean(abs_error), .groups = "drop")
+
+ggplot(survey_mae, aes(x = size, y = mae)) +
+  geom_point(color = "black", alpha = 1) + 
+  geom_smooth(method = "lm", se = TRUE, color = "red") + 
+  labs(
+    title = "Scatterplot of MAE vs Survey Size",
+    x = "Survey Size",
+    y = "Mean Absolute Error (MAE)"
+  ) +
+  theme_minimal()
+```
 
 -------------------
 
