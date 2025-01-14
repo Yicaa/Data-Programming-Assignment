@@ -586,7 +586,7 @@ psoe_summary <- psoe_first |>
     total_votes = sum(second_votes),  
     count_as_second = n(),           
     .groups = "drop"
-  ) %>%
+  ) |> 
   arrange(desc(date_elec)) 
 print(psoe_summary)
 
@@ -1177,7 +1177,21 @@ ggplot(final_election2, aes(x = log(population), y = vote_pct)) +
 Different parties show significant differences in support between rural and urban areas. EH-BILDU and BNG have higher support in rural areas, while MP, CS and PODEMOS-IU have stronger support in urban areas.
 ```{r}
 #| echo: false
-ggplot(party_votes, aes(x = party_code, y = total_votes, fill = as.factor(rural))) + 
+
+party_votes2 <- party_votes |> 
+  group_by(party_code) |> 
+  summarize(
+    rural_votes = sum(total_votes[rural == 1]),
+    urban_votes = sum(total_votes[rural == 0]),
+    total_votes_party = rural_votes + urban_votes,
+    rural_proportion = rural_votes / total_votes_party,
+    .groups = "drop") |> 
+  select(party_code, rural_proportion)
+
+party_votes2 <- party_votes |> 
+  left_join(party_votes2, by = join_by(party_code))
+
+ggplot(party_votes2, aes(x = reorder(party_code, rural_proportion, decreasing = TRUE), y = total_votes, fill = as.factor(rural))) + 
    geom_bar(stat = "identity", position = "fill") + 
    labs(
      title = "Proportion of votes for parties in Rural vs Urban Areas", 
@@ -1192,7 +1206,6 @@ ggplot(party_votes, aes(x = party_code, y = total_votes, fill = as.factor(rural)
      labels = c("Urban", "Rural") 
    ) + 
    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-
 
 ```
 
@@ -1257,7 +1270,7 @@ ggplot(polling_err, aes(x = reorder(party_code, avg_err), y = avg_err, fill = fa
   geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
   labs(
     title = "Polling Error by Political Party",
-    subtitle = "Average polling error for elections between 2008 and 2019 by main political party",
+    subtitle = "Average polling error (%) for elections between 2008 and 2019 by main political party",
     x = "Party",
     # y = "Average Polling Error")
     y = paste("\u2190 Underestimated", strrep(" ", 35), "Overestimated \u2192")) +
