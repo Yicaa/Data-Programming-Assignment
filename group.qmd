@@ -984,7 +984,7 @@ Basque nationalist parties achieve their highest scores in areas with extremely 
 ---
 
 ### Q3 : Impact of low turnout on election outcomes
-Low Turnout Areas (<70.7%) PSOE and PP dominate low-turnout areas, securing the highest vote shares. Smaller parties like VOX, CS, and EH-BILDU have moderate presence, while regional parties and new entrants struggle to gain significant traction.
+Low-Turnout Areas (<70.7%): PSOE and PP lead, with smaller parties like VOX, CS, and EH-BILDU moderately present. Regional and new parties gain little traction.
 ```{r}
 #| echo: false
 ggplot(low_turnout_summary, aes(x = party_code, y = vote_share, fill = party_code)) +
@@ -1062,15 +1062,23 @@ ggplot(extreme_low_turnout_summary, aes(x = party_code, y = vote_share, fill = p
   summary(model) 
         
 # Now breakdown for party  
-  ggplot(final_election2, aes(x = log(population), y = vote_pct)) + 
-   geom_point(alpha=0.2) + 
-   geom_smooth(method = "lm", se = TRUE, aes(color = party_code, group = party_code)) + 
-   facet_wrap(~party_code)+ 
-   labs(title = "Votes vs. Population by Party", 
-   x = "Population log", 
-   y = "Pct of votes for party") + 
-   theme_minimal() + 
-   theme(legend.position = "none")
+ggplot(final_election2, aes(x = log(population), y = vote_pct)) + 
+  geom_point(alpha = 0.2) + 
+  geom_smooth(
+    method = "lm", 
+    se = TRUE, 
+    aes(color = party_code, group = party_code) 
+  ) + 
+  facet_wrap(~party_code) + 
+  scale_color_manual(values = party_colors) + 
+  labs(
+    title = "Votes vs. Population by Party", 
+    x = "Population log", 
+    y = "Pct of votes for party",
+    color = "Party" 
+  ) + 
+  theme_minimal() + 
+  theme(legend.position = "none") 
   
 # Use regression to compare the interaction effects on rural areas and party code, and how that impacts vote percentages. 
   rural_compare <- lm(vote_pct ~ log(population) + rural*party_code, data = final_election2) 
@@ -1082,7 +1090,8 @@ ggplot(extreme_low_turnout_summary, aes(x = party_code, y = vote_share, fill = p
    summarise(total_votes = sum(party_ballots, na.rm = TRUE), .groups = "drop") |>  
    arrange(rural, desc(total_votes)) 
   party_votes 
-     #Visualizing the performance of urban and rural political parties: 
+
+#Visualizing the performance of urban and rural political parties: 
   ggplot(party_votes, aes(x = party_code, y = total_votes, fill = as.factor(rural))) + 
    geom_bar(stat = "identity", position = "fill") + 
    labs(title = "Proportion of votes for parties in Rural vs Urban Areas", 
@@ -1134,21 +1143,30 @@ Different parties show varying trends in vote percentages across population scal
 ```{r}
 #| echo: false
 # Now breakdown for party  
-  ggplot(final_election2, aes(x = log(population), y = vote_pct)) + 
-   geom_point(alpha=0.2) + 
-   geom_smooth(method = "lm", se = TRUE, aes(color = party_code, group = party_code)) + 
-   facet_wrap(~party_code)+ 
-   labs(title = "Votes vs. Population by Party", 
-   x = "Population log", 
-   y = "Pct of votes for party") + 
-   theme_minimal() + 
-   theme(legend.position = "none")
+ggplot(final_election2, aes(x = log(population), y = vote_pct)) + 
+  geom_point(alpha = 0.2) + 
+  geom_smooth(
+    method = "lm", 
+    se = TRUE, 
+    aes(color = party_code, group = party_code) 
+  ) + 
+  facet_wrap(~party_code) + 
+  scale_color_manual(values = party_colors) + 
+  labs(
+    title = "Votes vs. Population by Party", 
+    x = "Population log", 
+    y = "Pct of votes for party",
+    color = "Party" 
+  ) + 
+  theme_minimal() + 
+  theme(legend.position = "none") 
+
 ```
 
 ---
 
 ### Q4 : Relationship between census and vote (urban vs. rural)
-Different parties show significant differences in support between rural and urban areas. EH-BILDU and BNG have higher support in rural areas, while MP, CS and PODEMOS-IU have stronger support in urban areas
+Different parties show significant differences in support between rural and urban areas. EH-BILDU and BNG have higher support in rural areas, while MP, CS and PODEMOS-IU have stronger support in urban areas.
 ```{r}
 #| echo: false
 # Count the proportion of votes received in each area, then compare for statistically significant differences. 
@@ -1157,7 +1175,7 @@ Different parties show significant differences in support between rural and urba
    summarise(total_votes = sum(party_ballots, na.rm = TRUE), .groups = "drop") |>  
    arrange(rural, desc(total_votes)) 
   
-     #Visualizing the performance of urban and rural political parties: 
+#Visualizing the performance of urban and rural political parties: 
   ggplot(party_votes, aes(x = party_code, y = total_votes, fill = as.factor(rural))) + 
    geom_bar(stat = "identity", position = "fill") + 
    labs(title = "Proportion of votes for parties in Rural vs Urban Areas", 
@@ -1500,6 +1518,10 @@ trend_data |>
   geom_line(size = 1) +
   geom_point(size = 2) +
   scale_color_manual(values = party_colors) +  
+  scale_x_date(
+    date_breaks = "1 year",  
+    date_labels = "%Y"     
+  ) +
   labs(
     title = "Prediction Bias Trends Over Time",
     subtitle = "Analyzing consistency of survey projections across election periods",
@@ -1513,7 +1535,6 @@ trend_data |>
     plot.title = element_text(size = 14, face = "bold"),
     plot.subtitle = element_text(size = 10, color = "grey40")
   )
-
 ```
 The analysis of prediction bias trends over time highlights important patterns in the consistency of survey projections across election periods, as shown below:
 1.PP:
@@ -1544,6 +1565,10 @@ trend_data |>
   geom_line(size = 1) +
   geom_point(size = 2) +
   scale_color_manual(values = party_colors) +  
+  scale_x_date(
+    date_breaks = "1 year",  
+    date_labels = "%Y"     
+  ) +
   labs(
     title = "Prediction Bias Trends Over Time",
     subtitle = "Analyzing consistency of survey projections across election periods",
