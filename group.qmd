@@ -909,14 +909,18 @@ low_turnout_summary <- low_turnout_data |>
 
 ggplot(low_turnout_summary, aes(x = party_code, y = vote_share, fill = party_code)) +
   geom_bar(stat = "identity", color = "black", width = 0.7) +
+  geom_text(aes(label = round(vote_share, 1)), vjust = -0.5, size = 3) +  
+  geom_hline(yintercept = mean(low_turnout_summary$vote_share), linetype = "dashed", color = "red") + 
   labs(
     title = "Vote Share by Party in Low Turnout Areas (<70.7%)",
     subtitle = paste("Threshold for low turnout is", round(low_turnout_threshold, 1), "%"),
+    caption = "Dashed line represents the average vote share.",
     x = "Party",
     y = "Vote Share (%)"
   ) +
   theme_minimal() +
-  theme(legend.position = "none",
+  theme(
+    legend.position = "none",
     axis.text.x = element_text(angle = 45, hjust = 1),
     plot.title = element_text(size = 14, face = "bold"),
     plot.subtitle = element_text(size = 10, color = "grey40")
@@ -942,22 +946,27 @@ extreme_low_turnout_summary <- extreme_low_turnout_data |>
   ungroup() |> 
   mutate(party_code = fct_reorder(party_code, vote_share))
 
+average_vote_share <- mean(extreme_low_turnout_summary$vote_share)
+
 ggplot(extreme_low_turnout_summary, aes(x = party_code, y = vote_share, fill = party_code)) +
   geom_bar(stat = "identity", color = "black", width = 0.7) +
+  geom_hline(yintercept = average_vote_share, linetype = "dashed", color = "red") + 
+  geom_text(aes(label = round(vote_share, 1)), vjust = -0.5, size = 3) + 
   labs(
     title = "Vote Share by Party in Extreme Low Turnout Areas (<45%)",
-    subtitle = "Focus on regions with significantly low turnout rates",
+    subtitle = "Dashed line represents the average vote share",
     x = "Party",
     y = "Vote Share (%)"
   ) +
   theme_minimal() +
-  theme(legend.position = "none",
+  theme(
+    legend.position = "none",
     axis.text.x = element_text(angle = 45, hjust = 1),
     plot.title = element_text(size = 14, face = "bold"),
     plot.subtitle = element_text(size = 10, color = "grey40")
   ) +
   scale_fill_manual(values = party_colors) +
-  scale_y_continuous(labels = scales::percent_format(scale = 1))
+  scale_y_continuous(labels = scales::percent_format(scale = 1))   
 ```
 
 ```{r}
@@ -987,14 +996,18 @@ Low Turnout Areas (<70.7%) PSOE and PP dominate low-turnout areas, securing the 
 #| echo: false
 ggplot(low_turnout_summary, aes(x = party_code, y = vote_share, fill = party_code)) +
   geom_bar(stat = "identity", color = "black", width = 0.7) +
+  geom_text(aes(label = round(vote_share, 1)), vjust = -0.5, size = 3) +  
+  geom_hline(yintercept = mean(low_turnout_summary$vote_share), linetype = "dashed", color = "red") + 
   labs(
     title = "Vote Share by Party in Low Turnout Areas (<70.7%)",
     subtitle = paste("Threshold for low turnout is", round(low_turnout_threshold, 1), "%"),
+    caption = "Dashed line represents the average vote share.",
     x = "Party",
     y = "Vote Share (%)"
   ) +
   theme_minimal() +
-  theme(legend.position = "none",
+  theme(
+    legend.position = "none",
     axis.text.x = element_text(angle = 45, hjust = 1),
     plot.title = element_text(size = 14, face = "bold"),
     plot.subtitle = element_text(size = 10, color = "grey40")
@@ -1009,22 +1022,27 @@ ggplot(low_turnout_summary, aes(x = party_code, y = vote_share, fill = party_cod
 Extreme Low Turnout Areas (<45%) EAJ-PNV leads in extreme low-turnout areas, followed closely by PSOE and EH-BILDU. Traditional parties like PP still maintain influence, while smaller parties show minimal presence. 
 ```{r}
 #| echo: false
+average_vote_share <- mean(extreme_low_turnout_summary$vote_share)
+
 ggplot(extreme_low_turnout_summary, aes(x = party_code, y = vote_share, fill = party_code)) +
   geom_bar(stat = "identity", color = "black", width = 0.7) +
+  geom_hline(yintercept = average_vote_share, linetype = "dashed", color = "red") + 
+  geom_text(aes(label = round(vote_share, 1)), vjust = -0.5, size = 3) + 
   labs(
     title = "Vote Share by Party in Extreme Low Turnout Areas (<45%)",
-    subtitle = "Focus on regions with significantly low turnout rates",
+    subtitle = "Dashed line represents the average vote share",
     x = "Party",
     y = "Vote Share (%)"
   ) +
   theme_minimal() +
-  theme(legend.position = "none",
+  theme(
+    legend.position = "none",
     axis.text.x = element_text(angle = 45, hjust = 1),
     plot.title = element_text(size = 14, face = "bold"),
     plot.subtitle = element_text(size = 10, color = "grey40")
   ) +
   scale_fill_manual(values = party_colors) +
-  scale_y_continuous(labels = scales::percent_format(scale = 1))
+  scale_y_continuous(labels = scales::percent_format(scale = 1)) 
 ```
 
 -------------------
@@ -1061,7 +1079,7 @@ ggplot(extreme_low_turnout_summary, aes(x = party_code, y = vote_share, fill = p
    theme_minimal() + 
    theme(legend.position = "none")
   
-# Use regresison to compare the interaction effects on rural areas and party code, and how that impacts vote percentages. 
+# Use regression to compare the interaction effects on rural areas and party code, and how that impacts vote percentages. 
   rural_compare <- lm(vote_pct ~ log(population) + rural*party_code, data = final_election2) 
   summary(rural_compare) 
       
@@ -1092,11 +1110,11 @@ ggplot(extreme_low_turnout_summary, aes(x = party_code, y = vote_share, fill = p
 ```
 Through the analysis of the relationship between census and vote, we first calculated the vote percentage (vote_pct) for each party as the key variable and categorized the population into "rural" (fewer than 10,000 people) and "urban" (10,000 people or more) areas for comparison.
 
-First, I created a chart showing the relationship between the population size (log-transformed) of different constituencies and the vote percentage for a given party. From the chart, it can be observed that although there are some variations in vote percentages across different population sizes, the overall trend is not very strong. Using regression analysis (red line), it was confirmed that changes in population size cannot significantly explain variations in a party's vote percentage. The regression analysis showed no significant overall relationship between log-transformed population size and vote percentage, as the p-value was much greater than 0.05. Then, I used visualization to clearly demonstrate how different parties performed across constituencies of varying population sizes. For each party, I analyzed the relationship between population size (log-transformed) and vote percentage. It was found that PP showed a negative correlation between vote percentage and population size (downward slope), indicating that PP performed better in small constituencies (areas with smaller populations). On the other hand, PSOE, PODEMOS-IU, and OTHER showed a positive correlation (upward slope), indicating these parties performed better in larger constituencies (areas with larger populations).
+First, I created a chart showing the relationship between the population size (log-transformed) of different constituencies and the vote percentage for a given party. From the chart, it can be observed that although there are some variations in vote percentages across different population sizes, the overall trend is not very strong. Using regression analysis (red line), it was confirmed that changes in population size cannot significantly explain variations in a party's vote percentage. The regression analysis showed no significant overall relationship between log-transformed population size and vote percentage, as the p-value was much greater than 0.05. Then, I used visualization to clearly demonstrate how different parties performed across constituencies of varying population sizes. For each party, I analyzed the relationship between population size (log-transformed) and vote percentage. It was found that PP showed a negative correlation between vote percentage and population size (downward slope), indicating that PP performed better in small constituencies. On the other hand, PSOE, PODEMOS-IU, and OTHER showed a positive correlation (upward slope), indicating these parties performed better in larger constituencies.
 
-I then used regression analysis to study the interaction effects of rural areas (rural) and party (party_code) on vote percentage. The analysis revealed that rural areas had a significant negative impact on the overall vote percentage, while different parties performed significantly differently in rural and urban areas. For example, the CS party performed better in urban areas but weaker in rural areas, whereas parties like PSOE and PODEMOS-IU performed better in urban areas. The direct impact of population size on vote percentage was not significant.
+I then used regression analysis to study the interaction effects of rural areas (rural) and party (party_code) on vote percentage. The analysis revealed that rural areas had a significant negative impact on the overall vote percentage, while different parties performed significantly differently in rural and urban areas. CS party performed better in urban areas but weaker in rural areas, whereas parties like PSOE and PODEMOS-IU performed better in urban areas. The direct impact of population size on vote percentage was not significant.
 
-Next, I used the code to generate the vote distribution of different parties in rural and urban areas and examined its relationship with population size. First, the code categorized constituencies as "rural" (population less than 10,000) or "urban" and then calculated the total votes for each party in both rural and urban areas. Visualization of the vote proportions of different parties in rural and urban areas revealed that PP had a higher vote proportion in rural areas, while PSOE and PODEMOS-IU had higher vote proportions in urban areas. This indicates significant differences in party support between rural and urban areas.
+Next, I used the code to generate the vote distribution of different parties in rural and urban areas and examined its relationship with population size. First, the code categorized constituencies as "rural" (population less than 10,000) or "urban" and then calculated the total votes for each party in both rural and urban areas. Visualization of the vote proportions of different parties in rural and urban areas revealed that EH-BILDU and BNG had a higher vote proportion in rural areas, while MP, CS and PODEMOS-IU had higher vote proportions in urban areas. This indicates significant differences in party support between rural and urban areas.
 
 Finally, I conducted a two-way ANOVA to examine the impact of rural classification (rural) and party (party_code) on vote percentage (vote_pct), as well as the interaction between the two. The analysis showed that the standalone effect of rural classification on vote percentage was not significant. However, the interaction between party and rural classification revealed significant differences in party support between rural and urban areas.
 
@@ -1119,7 +1137,7 @@ There is no significant overall correlation between population size (log-transfo
 ---
 
 ### Q4 : Relationship between census and vote (urban vs. rural)
-Different parties show varying trends in vote percentages across population scales (log-transformed), such as PP performing better in smaller constituencies (lower population), while PSOE and PODEMOS-IU perform better in larger constituencies (higher population).
+Different parties show varying trends in vote percentages across population scales (log-transformed. PP performing better in lower population, while PSOE and PODEMOS-IU perform better in higher population.
 ```{r}
 #| echo: false
 # Now breakdown for party  
@@ -1137,7 +1155,7 @@ Different parties show varying trends in vote percentages across population scal
 ---
 
 ### Q4 : Relationship between census and vote (urban vs. rural)
-Different parties show significant differences in support between rural and urban areas. For example, PP has higher support in rural areas, while PSOE and PODEMOS-IU have stronger support in urban areas.
+Different parties show significant differences in support between rural and urban areas. EH-BILDU and BNG have higher support in rural areas, while MP, CS and PODEMOS-IU have stronger support in urban areas
 ```{r}
 #| echo: false
 # Count the proportion of votes received in each area, then compare for statistically significant differences. 
@@ -1529,7 +1547,7 @@ Overall: Major parties improved prediction accuracy, while newer and emerging pa
 ---
 
 ### Q7 : Survey projection accuracy over time
-Trends in survey prediction biases over time, focusing on bias evolution and accuracy for traditional, emerging, and regional parties. Insights for improving survey methods.
+Trends in survey prediction biases over time, focusing on bias evolution and accuracy for each party.
 ```{r}
 trend_data |> 
   ggplot(aes(x = date_elec, y = prediction_bias, color = party_code, group = party_code)) +
