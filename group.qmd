@@ -1104,7 +1104,7 @@ ggplot(party_votes, aes(x = party_code, y = total_votes, fill = as.factor(rural)
    scale_y_continuous(labels = scales::percent_format()) +  
    scale_fill_manual(
      values = c("0" = "#1f77b4", "1" = "#ff7f0e"),
-     labels = c("Urban", "Rural") # 标签替换
+     labels = c("Urban", "Rural") 
    ) + 
    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 
@@ -1189,7 +1189,7 @@ ggplot(party_votes, aes(x = party_code, y = total_votes, fill = as.factor(rural)
    scale_y_continuous(labels = scales::percent_format()) +  
    scale_fill_manual(
      values = c("0" = "#1f77b4", "1" = "#ff7f0e"), 
-     labels = c("Urban", "Rural") # 标签替换
+     labels = c("Urban", "Rural") 
    ) + 
    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 
