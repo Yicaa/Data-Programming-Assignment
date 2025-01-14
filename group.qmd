@@ -1092,15 +1092,23 @@ ggplot(final_election2, aes(x = log(population), y = vote_pct)) +
   party_votes 
 
 #Visualizing the performance of urban and rural political parties: 
-  ggplot(party_votes, aes(x = party_code, y = total_votes, fill = as.factor(rural))) + 
+ggplot(party_votes, aes(x = party_code, y = total_votes, fill = as.factor(rural))) + 
    geom_bar(stat = "identity", position = "fill") + 
-   labs(title = "Proportion of votes for parties in Rural vs Urban Areas", 
-   x = "Party", 
-   y = "Total Votes", 
-   fill = "Rural status \n(1 = Rural, 0 = Urban)") + 
+   labs(
+     title = "Proportion of votes for parties in Rural vs Urban Areas", 
+     x = "Party", 
+     y = "Total Votes", 
+     fill = "Rural status"
+   ) + 
    theme_minimal() + 
    scale_y_continuous(labels = scales::percent_format()) +  
-   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) 
+   scale_fill_manual(
+     values = c("0" = "#1f77b4", "1" = "#ff7f0e"),
+     labels = c("Urban", "Rural") # 标签替换
+   ) + 
+   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+
+
 
 #Two-way ANOVA to examine urban-rural and partisan interactions 
   final_election2$rural <- as.factor(final_election2$rural) 
@@ -1169,22 +1177,23 @@ ggplot(final_election2, aes(x = log(population), y = vote_pct)) +
 Different parties show significant differences in support between rural and urban areas. EH-BILDU and BNG have higher support in rural areas, while MP, CS and PODEMOS-IU have stronger support in urban areas.
 ```{r}
 #| echo: false
-# Count the proportion of votes received in each area, then compare for statistically significant differences. 
-  party_votes <- final_election2 |>  
-   group_by(rural, party_code) |>  
-   summarise(total_votes = sum(party_ballots, na.rm = TRUE), .groups = "drop") |>  
-   arrange(rural, desc(total_votes)) 
-  
-#Visualizing the performance of urban and rural political parties: 
-  ggplot(party_votes, aes(x = party_code, y = total_votes, fill = as.factor(rural))) + 
+ggplot(party_votes, aes(x = party_code, y = total_votes, fill = as.factor(rural))) + 
    geom_bar(stat = "identity", position = "fill") + 
-   labs(title = "Proportion of votes for parties in Rural vs Urban Areas", 
-   x = "Party", 
-   y = "Total Votes", 
-   fill = "Rural status \n(1 = Rural, 0 = Urban)") + 
+   labs(
+     title = "Proportion of votes for parties in Rural vs Urban Areas", 
+     x = "Party", 
+     y = "Total Votes", 
+     fill = "Rural status"
+   ) + 
    theme_minimal() + 
    scale_y_continuous(labels = scales::percent_format()) +  
-   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) 
+   scale_fill_manual(
+     values = c("0" = "#1f77b4", "1" = "#ff7f0e"), 
+     labels = c("Urban", "Rural") # 标签替换
+   ) + 
+   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+
+
 ```
 
 
