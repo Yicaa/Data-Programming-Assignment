@@ -14,7 +14,7 @@ editor: visual
 output-file: index.html
 ---
 
-## Required packages
+# Required packages
 
 We used the following packages for our analysis
 
@@ -77,7 +77,6 @@ The data will be as follows:
 The practice will be based on the **electoral data archives** below, compiling data on elections to the Spanish Congress of Deputies from 2008 to the present, as well as surveys, municipalities codes and abbreviations.
 
 ```{r}
-#| echo: false
 # NO TOQUES NADA
 election_data <- read_csv(file = "./data/datos_elecciones_brutos.csv")
 cod_mun <- read_csv(file = "./data/cod_mun.csv")
@@ -88,7 +87,6 @@ abbrev <- read_csv(file = "./data/siglas.csv")
 #### Cleaning the data -- surveys
 
 ```{r cleaning survey df}
-
 # Filter dataset
 cleaned_surveys <- surveys |>
   mutate(
@@ -408,24 +406,16 @@ The `turnout` data includes:
 
 ---
 
-## Data cleaning highlights
-We created three aggregated data files to work with based on the survey data; election data and election turnout. 
+# Data cleaning highlights
+  - High dimensionality was the key to address, e.g. election data \ with it's 471 columns. For this, our friends were `filter`, `pivot_longer`, `group_by` and `summarise`. 
+  
+  - Using `str_detect`, we were able to track most of the branches/federations of the main parties and group them together 
 
-High dimensionality was the key to address, e.g. election data \ with it's 471 columns. We ended up with a 16 column table that removed entirely missing value columns (9). For this, our friends were pivot_longer, distinct and summarise. 
-
-Election identifiers:
-
--   Timing -\> date
--   Location information -\> code_community (autonomous community), code_province, code_municipality, municipality, population
--   General election information -\> polling_stations, participation_1, participation_2, blank_votes, null_votes, valid_votes, total_votes
--   Party votes received -\> party_main, party_code, party_ballots
-
-```{r, echo = FALSE}
-head(final_election)
-```
-
----
-# Mandatory questions
+  - In the end we created three aggregated tidy data files to work with, based on survey data; election data and election turnout. The files all have standardized names and codes for parties, as well as election dates, which allow us to join them together when needed in our analysis
+    -   Timing → date
+    -   Location information → code_community (autonomous community), code_province, code_municipality, municipality, population
+    -   General election information → polling_stations, participation_1, participation_2, blank_votes, null_votes, valid_votes, total_votes
+    -   Party votes received → party_main, party_code, party_ballots
 
 ---
 
@@ -482,7 +472,7 @@ final_election |>
 
 ### Q1 : Dominant parties in municipalities with +100k habitants
 
-There were only 48 municipalities with over 100k people. 2 of the regions, Cádiz and Dos Hermanas had a varying population that was over 100k in some periods and under in others. We created a table with the winners and total % of vote, then plotted over time. PP have a stronghold in some areas. 
+There were only 48 municipalities with over 100k people. 2 of the cities, Cádiz and Dos Hermanas had a varying population that was over 100k in some periods and under in others. We created a table with the winners and total % of vote, then plotted over time. PP have a stronghold in some areas. 
 
 ```{r}
 #| echo: false
@@ -499,7 +489,7 @@ party_colors <- c(
   "CIU" = "#FFB232",        # CONVERGÈNCIA I UNIÓ
   "EH-BILDU" = "#A6CE39",   # EH - BILDU
   "MP" = "#0CDCC3",         # MÁS PAÍS
-  "Other" = "#808080"       # Other parties
+  "OTHER" = "#808080"       # Other parties
 )
 ```
 
@@ -539,7 +529,9 @@ ggplot(party_winners, aes(x = party_grouped, y = num_municipalities, fill = part
     strip.text = element_text(size = 12, face = "bold")
   )
 ```
+
 ---
+
 ## 2. Which party was the second when the first was the PSOE? And when the first was the PP? {visibility="hidden"}
 
 #### Identify the First and Second Parties
@@ -572,8 +564,8 @@ psoe_first <- ranked_parties |>
 #### Filter when PP is first
 
 ```{r}
-pp_first <- ranked_parties %>%
-  filter(rank == 1 & party_code == "PP") %>%  
+pp_first <- ranked_parties |> 
+  filter(rank == 1 & party_code == "PP") |> 
   left_join(ranked_parties %>% filter(rank == 2), by = c("date_elec", "code_municipality")) |> 
   rename(
     first_party = party_code.x,  
@@ -588,8 +580,8 @@ pp_first <- ranked_parties %>%
 #### Summarized PSOE first
 
 ```{r}
-psoe_summary <- psoe_first %>%
-  group_by(date_elec, second_party) %>%
+psoe_summary <- psoe_first |> 
+  group_by(date_elec, second_party) |> 
   summarise(
     total_votes = sum(second_votes),  
     count_as_second = n(),           
@@ -598,10 +590,10 @@ psoe_summary <- psoe_first %>%
   arrange(desc(date_elec)) 
 print(psoe_summary)
 
-psoe_summary_per_year <- psoe_first %>%
+psoe_summary_per_year <- psoe_first |> 
   group_by(date_elec) %>%                                
-  filter(second_votes == max(second_votes)) %>%          
-  select(date_elec, second_party) %>%      
+  filter(second_votes == max(second_votes)) |>          
+  select(date_elec, second_party) |>      
   arrange(date_elec)  |> 
   print()
   
@@ -612,8 +604,8 @@ PP was the second party when PSOE was the winner in all the elections.
 #### Summarized PP first
 
 ```{r}
-pp_summary <- pp_first %>%
-  group_by(date_elec, second_party) %>%
+pp_summary <- pp_first |> 
+  group_by(date_elec, second_party) |> 
   summarise(
     total_votes = sum(second_votes),  
     count_as_second = n(),           
@@ -622,10 +614,10 @@ pp_summary <- pp_first %>%
   arrange(desc(date_elec)) 
 print(pp_summary)
 
-pp_summary_per_year <- pp_first %>%
-  group_by(date_elec) %>%                                
-  filter(second_votes == max(second_votes)) %>%          
-  select(date_elec, second_party) %>%      
+pp_summary_per_year <- pp_first |> 
+  group_by(date_elec) |>                              
+  filter(second_votes == max(second_votes)) |>         
+  select(date_elec, second_party) |>     
   arrange(date_elec)  |> 
   print()
   
@@ -640,7 +632,7 @@ ggplot(psoe_first, aes(y = reorder(date_elec, desc(date_elec)),
                      x = second_votes, fill = second_party)) +
   
   geom_bar(stat = "identity", position = "identity", width = 0.7) +
-  scale_fill_manual(values = c("PP" = "#0157a1", "PODEMOS-IU" = "#663278", "VOX" = "#5AB531", "CS" = "#EB6109")) +
+  scale_fill_manual(values = party_colors) +
   scale_x_continuous(labels = scales::comma) + 
   theme_minimal() +
   labs(x="", y="", title= "Second party when the winner is PSOE", subtitle = "total n of votes per election") +
@@ -660,19 +652,19 @@ ggplot(psoe_first, aes(y = reorder(date_elec, desc(date_elec)),
 
 ```{r}
 # Step 1: Create population categories with ordered factors
-psoe_first <- psoe_first %>%
+psoe_first <- psoe_first |> 
   mutate(
     population_category = factor(
       case_when(
-        population < 10000 ~ "Pueblo Pequeño",
-        population >= 10000 & population < 50000 ~ "Pueblo Mediano",
-        population >= 50000 & population < 100000 ~ "Pueblo Grande",
-        population >= 100000 & population < 500000 ~ "Ciudad Pequeña",
-        population >= 500000 & population < 1000000 ~ "Gran Ciudad",
-        population >= 1000000 ~ "Metrópolis"
+        population < 10000 ~ "<10.000",
+        population >= 10000 & population < 50000 ~ ">= 10.000 & < 50.000",
+        population >= 50000 & population < 100000 ~ ">= 50.000 & < 100.000",
+        population >= 100000 & population < 500000 ~ ">= 100.000 & < 500.000",
+        population >= 500000 & population < 1000000 ~ ">= 500.000 & < 1.000.000",
+        population >= 1000000 ~ ">= 1.000.000"
       ),
-      levels = c("Pueblo Pequeño", "Pueblo Mediano", "Pueblo Grande", 
-                 "Ciudad Pequeña", "Gran Ciudad", "Metrópolis")
+      levels = c("<10.000", ">= 10.000 & < 50.000", ">= 50.000 & < 100.000", 
+                 ">= 100.000 & < 500.000", ">= 500.000 & < 1.000.000", ">= 1.000.000")
     )
   )
 
@@ -698,16 +690,11 @@ for (date in  unique_dates) {
                                     y = total_votes, 
                                     fill = second_party)) +
     geom_bar(stat = "identity", position = "dodge", width = 0.7) +
-    scale_fill_manual(values = c(
-      "PP" = "#0157a1", 
-      "PODEMOS-IU" = "#663278", 
-      "VOX" = "#5AB531", 
-      "CS" = "#EB6109"
-    )) +
+    scale_fill_manual(values = party_colors) +
     scale_y_continuous(labels = scales::comma) + 
     labs(
       title = paste("Second Party by Population for Election on", format(current_date, "%Y-%m-%d")),  # Format the date properly
-      x = "Population Category",
+      x = "Inhabitants per city",
       y = "Total Votes"
     ) +
     theme_minimal() +
@@ -727,17 +714,21 @@ for (date in  unique_dates) {
 for (date in unique_dates) {
   print(plots[[as.character(as.Date(date))]])
 }
-
 ```
 
 #### Vis PP first
 
+---
+
+### Q2 : Primary Runner-Up Parties to PSOE and PP in Elections
+When PSOE was the winner, PP was consistently the second most voted party in every election. Similarly, when PP was the winner, PSOE was the second most voted in almost all elections, except for 2015 and 2016, where PODEMOS-IU was the second most voted party
 ```{r}
+#| echo: false
 ggplot(pp_first, aes(y = reorder(date_elec, desc(date_elec)), 
                      x = second_votes, fill = second_party)) +
   
   geom_bar(stat = "identity", position = "identity", width = 0.7) +
-  scale_fill_manual(values = c("PSOE" = "#f20400", "PODEMOS-IU" = "#663278", "VOX" = "#5AB531", "CS" = "#EB6109")) +
+  scale_fill_manual(values = party_colors) +
   scale_x_continuous(labels = scales::comma) + 
   theme_minimal() +
   labs(x="", y="", title= "Second party when the winner is PP", subtitle = "total n of votes per election") +
@@ -753,87 +744,13 @@ ggplot(pp_first, aes(y = reorder(date_elec, desc(date_elec)),
   ) 
 ```
 
-#### Second most voted party by population when the first id PSOE
-
-```{r}
-# Step 1: Create population categories with ordered factors for PP
-pp_first <- pp_first %>%
-  mutate(
-    population_category = factor(
-      case_when(
-        population < 10000 ~ "Pueblo Pequeño",
-        population >= 10000 & population < 50000 ~ "Pueblo Mediano",
-        population >= 50000 & population < 100000 ~ "Pueblo Grande",
-        population >= 100000 & population < 500000 ~ "Ciudad Pequeña",
-        population >= 500000 & population < 1000000 ~ "Gran Ciudad",
-        population >= 1000000 ~ "Metrópolis"
-      ),
-      levels = c("Pueblo Pequeño", "Pueblo Mediano", "Pueblo Grande", 
-                 "Ciudad Pequeña", "Gran Ciudad", "Metrópolis")
-    )
-  )
-
-# Step 2: Loop through elections and create a plot for each election for PP
-unique_dates_pp <- unique(pp_first$date_elec)
-plots <- list()
-
-# Create a list to store plots for PP
-plots_pp <- list()
-
-for (date in unique_dates_pp) {
-  # Ensure `date` is treated as a valid Date object
-  current_date <- as.Date(date)
-  
-  # Filter data for the specific election date
-  data_filtered <- pp_first %>%
-    filter(date_elec == current_date) %>%
-    group_by(population_category, second_party) %>%
-    summarise(
-      total_votes = sum(second_votes, na.rm = TRUE),
-      .groups = "drop"
-    )
-  
-  # Create the plot
-  plot <- ggplot(data_filtered, aes(x = population_category, 
-                                    y = total_votes, 
-                                    fill = second_party)) +
-    geom_bar(stat = "identity", position = "dodge", width = 0.7) +
-    scale_fill_manual(values = c(
-      "PSOE" = "#f20400", 
-      "PODEMOS-IU" = "#663278", 
-      "VOX" = "#5AB531", 
-      "CS" = "#EB6109"
-    )) +
-    scale_y_continuous(labels = scales::comma) + 
-    labs(
-      title = paste("Second Party by Population for Election on", format(current_date, "%Y-%m-%d")),  # Format the date properly
-      x = "Population Category",
-      y = "Total Votes"
-    ) +
-    theme_minimal() +
-    theme(
-      plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
-      axis.text.x = element_text(size = 10, angle = 45, hjust = 1),
-      axis.text.y = element_text(size = 10),
-      legend.position = "bottom",
-      legend.title = element_blank()  # Remove legend title
-    )
-  
-  # Save the plot to the list
-  plots_pp[[as.character(current_date)]] <- plot
-}
-
-# Step 3: Display all plots for PP (one at a time)
-for (date in unique_dates_pp) {
-  print(plots_pp[[as.character(as.Date(date))]])
-}
-```
-
 ---
+
 ### Q2 : Primary Runner-Up Parties to PSOE and PP in Elections
-ANY TEXT YOU WANT
+The original code was a loop that analyzed the second-party votes across all elections, breaking down the results by the size of the cities (in terms of population) where people voted.
 
 ```{r}
+#| echo: false
 pp_first <- pp_first |> 
   mutate(
     population_category = factor(
@@ -883,7 +800,82 @@ plot_2019 <- ggplot(data_filtered_2019, aes(x = population_category,
 print(plot_2019)
 ```
 
-------------------------------------------------------------------------
+---
+
+### Q2 : Primary Runner-Up Parties to PSOE and PP in Elections
+
+```{r}
+#| echo: true
+#| eval: false
+# Step 1: Create population categories with ordered factors for PP
+pp_first <- pp_first |> 
+  mutate(
+    population_category = factor(
+      case_when(
+        population < 10000 ~ "<10.000",
+        population >= 10000 & population < 50000 ~ ">= 10.000 & < 50.000",
+        population >= 50000 & population < 100000 ~ ">= 50.000 & < 100.000",
+        population >= 100000 & population < 500000 ~ ">= 100.000 & < 500.000",
+        population >= 500000 & population < 1000000 ~ ">= 500.000 & < 1.000.000",
+        population >= 1000000 ~ ">= 1.000.000"
+      ),
+      levels = c("<10.000", ">= 10.000 & < 50.000", ">= 50.000 & < 100.000", 
+                 ">= 100.000 & < 500.000", ">= 500.000 & < 1.000.000", ">= 1.000.000")
+    )
+  )
+
+# Step 2: Loop through elections and create a plot for each election for PP
+unique_dates_pp <- unique(pp_first$date_elec)
+plots <- list()
+
+# Create a list to store plots for PP
+plots_pp <- list()
+
+for (date in unique_dates_pp) {
+  # Ensure `date` is treated as a valid Date object
+  current_date <- as.Date(date)
+  
+  # Filter data for the specific election date
+  data_filtered <- pp_first |> 
+    filter(date_elec == current_date) |> 
+    group_by(population_category, second_party) |> 
+    summarise(
+      total_votes = sum(second_votes, na.rm = TRUE),
+      .groups = "drop"
+    )
+  
+  # Create the plot
+  plot <- ggplot(data_filtered, aes(x = population_category, 
+                                    y = total_votes, 
+                                    fill = second_party)) +
+    geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+    scale_fill_manual(values = party_colors) +
+    scale_y_continuous(labels = scales::comma) + 
+    labs(
+      title = paste("Second Party by Population for Election on", format(current_date, "%Y-%m-%d")),  # Format the date properly
+      x = "Inhabitants per city",
+      y = "Total Votes"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(face = "bold", size = 14, hjust = 0.5),
+      axis.text.x = element_text(size = 10, angle = 45, hjust = 1),
+      axis.text.y = element_text(size = 10),
+      legend.position = "bottom",
+      legend.title = element_blank()  # Remove legend title
+    )
+  
+  # Save the plot to the list
+  plots_pp[[as.character(current_date)]] <- plot
+}
+
+# Step 3: Display all plots for PP (one at a time)
+for (date in unique_dates_pp) {
+  print(plots_pp[[as.character(as.Date(date))]])
+}
+```
+
+---
 
 ## 3. Who benefits from low turnout? {visibility="hidden"}
 
@@ -1216,9 +1208,20 @@ polling_err <- final_q5 |>
 
 Bigger party might be subject to bigger errors because they are voted by more people (ex. PNV cannot be over/underestimated by several percentage points as it only receives 1% of votes)
 
+There does not seem to be any party that is consistently overestimated or underestimated by a big amount. Surveys have only difficulties in capturing support to smaller parties, category "OTHER", but this is plausible as often survey give a limited number of responses available, and in general support for smaller parties is more difficult to detect
+
+I wanted also to investigate whether surveys conducted short before an election are more reflective of the results of that election. I would expect that they indeed should produce a lower polling error, not because surveys conducted long before the election are necessarily wrong, but because opinion of people can change.
+
+This relationship indeed exists (is significant), but explains very little of the variability of the MAE of polls. This also seems to suggest us that people's voting intentions are quite stable in Spain.
+
+To try to explain the variability of polling errors I therefore explored whether more accurate polls were the ones conducted on a bigger sample size. Again, this relationship exists (polls with a bigger sample size seem to be more precise), it is significant, but it explains very little of the total variability of the polling error.
+
+So in the next question we will explore whether it's the case that simply there are some pollster that are able to predict people's voting intention better than others.
+
 -------------------
 
 ### Q5 : Polling error
+Are some parties consistently underestimated or overestimated by surveys?
 ```{r}
 #| echo: false
 ggplot(polling_err, aes(x = reorder(party_code, avg_err), y = avg_err, fill = factor(party_code))) +
@@ -1243,6 +1246,83 @@ ggplot(polling_err, aes(x = reorder(party_code, avg_err), y = avg_err, fill = fa
     panel.grid.minor = element_blank(),
     axis.title.y = element_text(size = 8)) +
   guides(fill = guide_legend(title = "Political Party"))
+```
+
+-------------------
+
+### Q5 : Polling error vs days before election
+Are polls more precise as we get closer to the election?
+```{r}
+#| echo: false
+surveys_date <- final_surveys |> 
+  left_join(election_q5, by = join_by(date_elec, party_code)) |> 
+  select(date_elec, id_pollster, media, field_date_from, field_date_to, size, party_code, votes, share_votes) |> 
+  rename(voting_intention = votes, actual_votes = share_votes)
+
+survey_mae <- surveys_date |> 
+  mutate(abs_error = abs(voting_intention - actual_votes)) |>
+  group_by(id_pollster, date_elec, media, field_date_from, field_date_to, size) |>
+  summarise(mae = mean(abs_error), .groups = "drop") |> 
+  mutate(days_to_election = as.numeric(difftime(date_elec, field_date_to, units = "days")))
+
+ggplot(survey_mae, aes(x = days_to_election, y = mae)) +
+  geom_point(color = "black", alpha = 1) + 
+  geom_smooth(method = "lm", se = TRUE, color = "red") + 
+  scale_y_continuous(limits = c(0,5), expand = expansion(add = c(0,0))) +
+  labs(
+    title = "Does proximity to the election explain polling errors?",
+    subtitle = "Each point represent a national survey conducted for any election between 2008 and 2019",
+    x = "Number of days before an election \u2192",
+    y = "Surveys's Mean Absolute Error"
+  ) +
+  scale_x_reverse(limits = c(1500,0), expand = expansion(add = c(0,0))) +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank(),
+        plot.subtitle = element_text(size = 10))
+```
+
+```{r}
+#| echo: false
+#| eval: false
+summary(lm(mae ~ days_to_election, data = survey_mae))
+```
+
+-------------------
+
+### Q5 : Polling error vs surveys size
+Are surveys conducted on a bigger sample more precise?
+```{r}
+#| echo: false
+surveys_100 <- final_surveys |> 
+  filter(abs(as.numeric(difftime(date_elec, field_date_from, units = "days"))) <= 60) |> 
+  left_join(election_q5, by = join_by(date_elec, party_code)) |> 
+  select(date_elec, id_pollster, media, field_date_from, field_date_to, size, party_code, votes, share_votes) |> 
+  rename(voting_intention = votes, actual_votes = share_votes)
+
+survey_mae <- surveys_100 |> 
+  mutate(abs_error = abs(voting_intention - actual_votes)) |>
+  group_by(id_pollster, date_elec, media, field_date_from, field_date_to, size) |>
+  summarise(mae = mean(abs_error), .groups = "drop")
+
+ggplot(survey_mae, aes(x = size, y = mae)) +
+  geom_point(color = "black", alpha = 1) + 
+  geom_smooth(method = "lm", se = TRUE, color = "red") + 
+  scale_y_continuous(limits = c(0,4), expand = expansion(add = c(0,0))) +
+  labs(
+    title = "Does sample size explain polling error?",
+     subtitle = "Each point represent a national survey conducted for any election between 2008 and 2019",
+    x = "Survey's Sample Size",
+    y = "Surveys's Mean Absolute Error"
+  ) +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank(),
+        plot.subtitle = element_text(size = 10))
+```
+
+```{r}
+#| echo: false
+#| eval: false
+summary(lm(mae ~ size, data = survey_mae))
 ```
 
 -------------------
@@ -1382,9 +1462,6 @@ ggplot(wmae, aes(x = pollster, y = WMAE, fill = WMAE)) +
   scale_fill_gradient2(low = "green", mid = "#ffc403", high = "#c70b1f", midpoint = 1.8) 
 
 ```
-
-
-# Exploratory questions
 
 ---
 
