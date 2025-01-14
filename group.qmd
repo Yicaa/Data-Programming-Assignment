@@ -14,7 +14,7 @@ editor: visual
 output-file: index.html
 ---
 
-## Required packages
+# Required packages
 
 We used the following packages for our analysis
 
@@ -77,7 +77,6 @@ The data will be as follows:
 The practice will be based on the **electoral data archives** below, compiling data on elections to the Spanish Congress of Deputies from 2008 to the present, as well as surveys, municipalities codes and abbreviations.
 
 ```{r}
-#| echo: false
 # NO TOQUES NADA
 election_data <- read_csv(file = "./data/datos_elecciones_brutos.csv")
 cod_mun <- read_csv(file = "./data/cod_mun.csv")
@@ -88,7 +87,6 @@ abbrev <- read_csv(file = "./data/siglas.csv")
 #### Cleaning the data -- surveys
 
 ```{r cleaning survey df}
-
 # Filter dataset
 cleaned_surveys <- surveys |>
   mutate(
@@ -408,24 +406,16 @@ The `turnout` data includes:
 
 ---
 
-## Data cleaning highlights
-We created three aggregated data files to work with based on the survey data; election data and election turnout. 
+# Data cleaning highlights
+  - High dimensionality was the key to address, e.g. election data \ with it's 471 columns. For this, our friends were `filter`, `pivot_longer`, `group_by` and `summarise`. 
+  
+  - Using `str_detect`, we were able to track most of the branches/federations of the main parties and group them together 
 
-High dimensionality was the key to address, e.g. election data \ with it's 471 columns. We ended up with a 16 column table that removed entirely missing value columns (9). For this, our friends were pivot_longer, distinct and summarise. 
-
-Election identifiers:
-
--   Timing -\> date
--   Location information -\> code_community (autonomous community), code_province, code_municipality, municipality, population
--   General election information -\> polling_stations, participation_1, participation_2, blank_votes, null_votes, valid_votes, total_votes
--   Party votes received -\> party_main, party_code, party_ballots
-
-```{r, echo = FALSE}
-head(final_election)
-```
-
----
-# Mandatory questions
+  - In the end we created three aggregated tidy data files to work with, based on survey data; election data and election turnout. The files all have standardized names and codes for parties, as well as election dates, which allow us to join them together when needed in our analysis
+    -   Timing → date
+    -   Location information → code_community (autonomous community), code_province, code_municipality, municipality, population
+    -   General election information → polling_stations, participation_1, participation_2, blank_votes, null_votes, valid_votes, total_votes
+    -   Party votes received → party_main, party_code, party_ballots
 
 ---
 
@@ -482,7 +472,7 @@ final_election |>
 
 ### Q1 : Dominant parties in municipalities with +100k habitants
 
-There were only 48 municipalities with over 100k people. 2 of the regions, Cádiz and Dos Hermanas had a varying population that was over 100k in some periods and under in others. We created a table with the winners and total % of vote, then plotted over time. PP have a stronghold in some areas. 
+There were only 48 municipalities with over 100k people. 2 of the cities, Cádiz and Dos Hermanas had a varying population that was over 100k in some periods and under in others. We created a table with the winners and total % of vote, then plotted over time. PP have a stronghold in some areas. 
 
 ```{r}
 #| echo: false
